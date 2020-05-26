@@ -1,0 +1,55 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: ¦ÌVision V5.13.0.0
+Copyright (C) 2014 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: z xy, esto, LIC=BL2SB-2GXUG-14WSR-KHU0G-D7AG2-PARLH
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Professional  Version: 5.13.0.0
+Toolchain Path:  D:\keil5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.05 update 1 (build 106)
+Assembler:       Armasm.exe V5.05 update 1 (build 106)
+Linker/Locator:  ArmLink.exe V5.05 update 1 (build 106)
+Library Manager: ArmAr.exe V5.05 update 1 (build 106)
+Hex Converter:   FromElf.exe V5.05 update 1 (build 106)
+CPU DLL:         SARMCM3.DLL V5.13.0.0
+Dialog DLL:      DCM.DLL V1.13.1.0
+Target DLL:      Segger\JL2CM3.dll V2.99.11.0
+Dialog DLL:      TCM.DLL V1.14.4.0
+ 
+<h2>Project:</h2>
+E:\My_Project\4GÄ£¿é\¹éµµ\ÎÈ¶¨°æ\E110_1\Abox\project.uvprojx
+Project File Date:  12/02/2019
+
+<h2>Output:</h2>
+Build target 'rt-thread_stm32f4xx'
+compiling cc3100.c...
+..\include\drivers\wifi\CC3100\source\cc3100.c(524): warning:  #513-D: a value of type "char *" cannot be assigned to an entity of type "signed char *"
+        secParams.Key = serNetConfig.netConfig.wifiConfig.wifiPassword;
+..\include\drivers\wifi\CC3100\source\cc3100.c(527): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "const signed char *"
+      retVal = sl_WlanConnect(serNetConfig.netConfig.wifiConfig.wifiName, 
+..\include\drivers\wifi\CC3100\source\cc3100.c(561): warning:  #223-D: function "processDataFromServer" declared implicitly
+                        processDataFromServer();
+..\include\drivers\wifi\CC3100\source\cc3100.c(788): warning:  #111-D: statement is unreachable
+      Status = sl_Close(SockID);
+..\include\drivers\wifi\CC3100\source\cc3100.c(1106): warning:  #111-D: statement is unreachable
+      retVal = sl_Stop(SL_STOP_TIMEOUT);
+..\include\drivers\wifi\CC3100\source\cc3100.c: 5 warnings, 0 errors
+linking...
+Program Size: Code=209732 RO-data=11608 RW-data=1804 ZI-data=41516  
+After Build - User command #1: fromelf --bin .\build\rtthread-stm32f4xx.axf --output est.bin
+After Build - User command #2: .\filecrc.exe est.bin
+280e0f36
+".\build\rtthread-stm32f4xx.axf" - 0 Error(s), 5 Warning(s).
+
+<h2>Collection of Component include folders:</h2>
+  E:\My_Project\4GÄ£¿é\¹éµµ\ÎÈ¶¨°æ\E110_1\Abox\RTE
+  D:\keil5\ARM\PACK\Keil\STM32F4xx_DFP\2.11.0
+
+<h2>Collection of Component Files used:</h2>
+</pre>
+</body>
+</html>

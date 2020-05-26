@@ -1,0 +1,17 @@
+.\build\padlock.o: ..\mbedtls\mbedtls\library\padlock.c
+.\build\padlock.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\padlock.o: ..\include\rtthread.h
+.\build\padlock.o: ..\applications\rtconfig.h
+.\build\padlock.o: ..\include\rtdebug.h
+.\build\padlock.o: ..\include\rtdef.h
+.\build\padlock.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\padlock.o: ..\include\rtservice.h
+.\build\padlock.o: ..\include\rtm.h
+.\build\padlock.o: ..\include\rtthread.h
+.\build\padlock.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\padlock.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h
+.\build\padlock.o: ..\mbedtls\mbedtls\include\mbedtls/padlock.h
+.\build\padlock.o: ..\mbedtls\mbedtls\include\mbedtls/aes.h
+.\build\padlock.o: D:\keil5\ARM\ARMCC\Bin\..\include\stddef.h
+.\build\padlock.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdint.h
+.\build\padlock.o: D:\keil5\ARM\ARMCC\Bin\..\include\string.h

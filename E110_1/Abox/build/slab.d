@@ -1,0 +1,10 @@
+.\build\slab.o: ..\Libraries\kernel\slab.c
+.\build\slab.o: ..\include\rthw.h
+.\build\slab.o: ..\include\rtthread.h
+.\build\slab.o: ..\applications\rtconfig.h
+.\build\slab.o: ..\include\rtdebug.h
+.\build\slab.o: ..\include\rtdef.h
+.\build\slab.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\slab.o: ..\include\rtservice.h
+.\build\slab.o: ..\include\rtm.h
+.\build\slab.o: ..\include\rtthread.h

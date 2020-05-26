@@ -1,0 +1,15 @@
+.\build\msh.o: ..\Libraries\finsh\msh.c
+.\build\msh.o: ..\Libraries\finsh\msh.h
+.\build\msh.o: ..\include\rtthread.h
+.\build\msh.o: ..\applications\rtconfig.h
+.\build\msh.o: ..\include\rtdebug.h
+.\build\msh.o: ..\include\rtdef.h
+.\build\msh.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\msh.o: ..\include\rtservice.h
+.\build\msh.o: ..\include\rtm.h
+.\build\msh.o: ..\include\rtthread.h
+.\build\msh.o: ..\Libraries\finsh\finsh.h
+.\build\msh.o: D:\keil5\ARM\ARMCC\Bin\..\include\ctype.h
+.\build\msh.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\build\msh.o: D:\keil5\ARM\ARMCC\Bin\..\include\string.h
+.\build\msh.o: ..\Libraries\finsh\shell.h

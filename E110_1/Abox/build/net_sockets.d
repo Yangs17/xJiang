@@ -1,0 +1,12 @@
+.\build\net_sockets.o: ..\mbedtls\mbedtls\library\net_sockets.c
+.\build\net_sockets.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\net_sockets.o: ..\include\rtthread.h
+.\build\net_sockets.o: ..\applications\rtconfig.h
+.\build\net_sockets.o: ..\include\rtdebug.h
+.\build\net_sockets.o: ..\include\rtdef.h
+.\build\net_sockets.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\net_sockets.o: ..\include\rtservice.h
+.\build\net_sockets.o: ..\include\rtm.h
+.\build\net_sockets.o: ..\include\rtthread.h
+.\build\net_sockets.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\net_sockets.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h

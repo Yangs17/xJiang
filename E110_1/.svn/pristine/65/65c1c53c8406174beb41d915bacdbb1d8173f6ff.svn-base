@@ -1,0 +1,415 @@
+
+#ifndef __MYDEF_H__
+#define __MYDEF_H__
+
+#include "rtdef.h"
+#include "ctrl.h"
+#include "dictionary.h"
+#include "at.h"
+#include "stm32f4xx_gpio.h"
+#include "netif.h"
+#include "var_mq.h"
+#include "wwdg.h"
+#include "net_config.h"
+
+//message pool 
+extern char *msg_pool_arry;// message pool
+
+//#define VAR_MQ //自定义消息队列开启 
+
+typedef struct MESSAGE_QUEUE_INFO{
+	rt_mq_t mq;			//消息队列地址
+	//const char* name;	//消息队列的名称；
+	//rt_size_t msg_size;	//消息队列中一条消息的最大长度；
+	//rt_size_t max_msgs;	//消息队列的最大容量；
+	//rt_uint8_t flag;	//消息队列采用的等待方式，可以取值：
+}Message_Queue_Info;
+
+
+
+
+#define DATA_ADDR 	     ADDR_FLASH_SECTOR_1 //目前：保存sys信息 + freq信息 
+#define DATA_ADDR_SIZE   0x4000   //16K
+
+#define DATA_FREQ_ADDR  		  (DATA_ADDR + sizeof(stSysSetup)) //freq info
+#define SERVER_NET_INFO_ADDR 	  (DATA_ADDR+0x400)				   //server info
+
+#define OFFSET_DATA_SIZE    0x400*2  //2K
+
+#define UPDATA_APP_ADDR  ADDR_FLASH_SECTOR_9 //128k 
+
+#define PRINTF_CURRENT_POSITION   assert_param(0)
+
+/* the head of can's data */
+#define SOT 0xEB
+
+#define CSOH '#' //box    发给 服务器的包头
+#define SSOH '$' //服务器 发给 box的包头
+#define FALSH_ERROR "FLASH ERROR"
+#define POWER_DOWN  "Power_down"
+
+
+/* the signal strength that can guarantee the normal communication of the module */
+#define SIGNAL_NOR 0x0E
+
+/* time */ 
+#define WAIT_ACT_TIME (RT_TICK_PER_SECOND*10)		 	//wait for the activation interval.
+#define HTIME (60*60*RT_TICK_PER_SECOND) 				// wait this time to  activation module
+#define PANEL_HEART_TIME (RT_TICK_PER_SECOND*5) 		//with the pallet heartbeat interval.
+
+#define GSM_TIME_OUT (RT_TICK_PER_SECOND * 60) 			//the GSM command timeout period.
+#define ETH_HEART_TIME (RT_TICK_PER_SECOND*30)
+#define TIME_OUT_REBOOT  (15*RT_TICK_PER_SECOND)
+
+
+/* send type */
+enum SEND_SERVER_DATA_TYPE
+{
+	SEND_CLOSE,
+	SEND_POWER_DOWN,
+	SEND_DATA
+};
+
+//与服务器连接状态
+enum  SERVER_CONNECT_STATUS{
+	DISCONNENCT,		 //0：未连接
+  	CONNECT_AT,			 //1: 等待注册状态
+	CONNECT_SERVER,		 //2：已与服务器建立连接
+	
+	AT_DEVICE_READ_ERROR,//3: AT模块读取失败
+	AT_ORDER_FAIL,		 //4: AT指令发送失败
+	CSQ_ERROR,		     //5: 模块信号强度读取失败
+	SIM_ERROR,		     //6：SIM卡读取不到
+	ADDERR_ERROR,        //7: 模块地址获取失败
+	CONNECT_FAIL,	     //8：连接服务器失败
+
+	SEND_ERR,			 //9:数据发送出错
+	RECV_ERR,			 //10:数据接收出错 
+	
+	MOD_UPDATA,			 //11: 模块更新程序
+};
+
+
+//一级命令
+enum CMD_FIRST{
+	TCMD_1 = 1,    //与服务器心跳 #
+	TCMD_102 = 102,//面板与服务器的通讯内容        # $
+
+	TCMD_20 = 20,  //2G 4G注册 #
+	TCMD_21 = 21,  //subg模块注册 #
+	TCMD_19 = 19,  //服务器返回的注册信息 $
+
+	TCMD_12 = 12,  //远程更新启动 $
+	TCMD_11 = 11,  //远程更新过程中的数据收发命令 # $
+	
+	TCMD_120 = 120, //警报 #
+	TCMD_121 = 121, //服务器下发数据字典内容 $
+	TCMD_122 = 122, //模块返回数据字典内容 #
+
+	TCMD_110 = 110, //配置Abox 频段信息
+};
+
+
+//二级命令集合
+enum CMD_SECOND{
+	CMD_103 = 0X103, //recv serch dictionary's comand
+	CMD_104 = 0X104, //return dictionary
+	CMD_120 = 0X120, //power down
+	CMD_125 = 0X125, //it is not work 
+
+	CMD_160 = 0X160, //
+	CMD_161 = 0X161, //	recv heart from panel
+	CMD_162 = 0X162, //send heart to panel
+
+	/* updata mod */
+	CMD_163 = 0X163,
+	CMD_164 = 0X164, 
+
+	/* funcc test: display the corresponding information on the panel. */
+	CMD_165 = 0x165,
+
+	
+	CMD_178 = 0X178, 
+	
+
+};
+
+
+
+enum AT_STATUS{
+	AT_BOOT,
+	AT_FREE,		  // gsm moden is free
+	
+	AT_SEND,
+	AT_RECV,
+	AT_CSQ,
+	
+	AT_MDN,
+	AT_CLOSE,
+
+	AT_SER_UPDATA,
+	AT_YMODEM_UPDATA,
+};
+
+
+enum GSM_RECV_RESULT{
+	RECV_CON = -1,    // receives continue
+	RECV_RESULT_OK,   // receives "send ok"
+	RECV_RESULT_TOUT, // time out 
+	RECV_RESULT_CERR, // receives "CONNECT FAIL"
+	RECV_RESULT_SERR  // receives "SEND FAIL
+};
+
+
+
+
+/* panel connection */
+enum ETH_OP_CON{
+	ETH_OP_ERR,
+	ETH_OP_OK,
+};
+
+
+
+/* mq type */
+enum EX_EVENT_TYPE{
+	NORMAL_EVENT,
+	EMERGENCY_EVENT,
+	UPDATA_EVENT,
+};
+
+/*
+Dev_type  编号	设备	说明
+0x00	普通标准注塑机	
+0x01	普通标准注塑机	
+0x10	Ilink通信模块	Ilink直连server
+0x11	Ilink Cbox	
+0x12	Ilink Abox	
+0x20 ~ 0x30	运动健康	
+0x30	辅机1	
+0x31	辅机2	
+0x32	辅机3	
+0x33	辅机4	
+*/
+/* device type */
+enum DEV_TYPE
+{
+	BOX_DEV_TYPE  = 0x10,
+	ABOX_DEV_TYPE = 0x11,
+	CBOX_DEV_TYPE1 = 0x12,//2G 4G
+	CBOX_DEV_TYPE2 = 0x13,//subg
+	
+	AUX_DEV_TYPE1 = 0x30, /* The reserved.  */
+	AUX_DEV_TYPE2 = 0x31,
+	AUX_DEV_TYPE3 = 0x32,
+	AUX_DEV_TYPE4 = 0x33,
+};
+	
+
+enum SERVER_NET_NUMBER
+{
+	NET_SET0, //默认iot.esto.cn 19991 
+	NET_SET1, 
+	NET_SET2,
+	NET_SET3,
+	NET_SET4,
+};
+
+
+
+/* the heart message from mod to panel */
+typedef struct CMD_162_INFO{
+   
+   rt_uint16_t status;    //the status of mod 
+   rt_uint8_t signal;      //signal of mod
+   rt_uint8_t reginfo;     //The activation
+
+   rt_uint32_t mod_sn;     //Serial number of mod
+   rt_uint16_t mod_pVer;   //the program vertion of mod
+
+   rt_uint16_t sreg;       //Has the server registered this module? 1:has  0:no
+   							
+
+   rt_uint16_t reserved;
+ //  rt_uint16_t sign_op;    //High byte indicates whether the communication is stable, 
+   							//and low byte indicates the signal strength 
+   							//that can guarantee the normal communication of the module.
+  
+   	
+}CMD_162_Info;
+
+
+/* the heart message from panel to mod */
+typedef struct CMD_161_INFO{
+	rt_uint8_t   mod_status; 	// 0,不激活2G模块，1表示激活2G模块
+	rt_uint8_t   panel_status;	//0,表示机器待机， 1表示机器工作
+}CMD_161_Info;
+
+
+/* the heart message from panel to mod */
+typedef struct CMD_163_INFO{
+	rt_uint32_t ver;    //下发的程序版本
+	rt_uint32_t flen ;  //要发送的文件长度
+}CMD_163_Info;
+
+
+typedef struct CMD_165_INFO{
+	rt_uint32_t abox_modId;//Abox mod id
+}CMD_165_Info;
+
+
+
+
+/* the heart message from panel to mod */
+typedef struct CMD_160_INFO{
+
+	rt_uint16_t code;
+	rt_uint16_t code1;
+	rt_uint32_t dev_id;//命名规则同上  包括type_id 跟 面板MAC地址后三位
+	rt_uint32_t mod_id;//2Gmod id
+
+// +155命令整合
+    rt_uint16_t  sw_ver; // 软件版本
+	rt_uint16_t  hw_type;// 硬件版本
+	rt_uint16_t  hw_info;//厂商信息
+    rt_uint16_t  pro_ver;//协议版本
+}CMD_160_Info;
+
+
+
+
+/* Remote update command */
+typedef struct TCMD_20_INFO{
+	rt_uint32_t n; //2G 经纬度  n e
+	rt_uint32_t e;
+	
+	rt_uint16_t	ver ; //版本号
+	rt_uint8_t  mdn[16];// 模块号码
+	
+	rt_uint32_t lac;//4G 经纬度 
+	rt_uint32_t cid;
+}TCMD_20_Info;
+
+
+
+/* Remote update command */
+typedef struct TCMD_21_INFO{
+	rt_uint16_t  sw_ver;//软件版本
+	rt_uint32_t  dev_id;//设备
+	rt_uint32_t  reserved1; //预留
+	rt_uint32_t  reserved2;// 预留
+}TCMD_21_Info;
+
+
+
+
+/* Remote update command */
+typedef struct TCMD_11_INFO{
+	rt_uint32_t ver;  //程序版本
+	rt_uint32_t  reserved0;//保留位 
+	rt_uint32_t  reserved1;//保留位
+	rt_uint32_t flen ;  //已接收到的文件长度	  0XFF FF FF FF 表示文件出错
+}TCMD_11_Info;
+
+
+
+
+/* Remote update command */
+typedef struct TCMD_12_INFO{
+	rt_uint32_t ver;  //程序版本
+	rt_uint32_t  reserved1;//保留位 
+	rt_uint32_t  reserved2;//保留位
+	rt_uint32_t flen ;  //要发送的文件长度
+}TCMD_12_Info;
+
+
+
+
+/* Server registration command */
+typedef struct TCMD_19_INFO{
+	rt_uint16_t status;	 // 0 box未注册	1 已注册
+	rt_uint32_t aux_dev_id[5]; //cbox aux1 aux2 aux3 aux4
+	// aux_dev_id[0] 预留位
+	// aux_dev_id[1] ~aux_dev_id[4] 按照客户注册的接口1-4 接口依次放入 
+
+}TCMD_19_Info;
+
+
+/* Server registration command */
+typedef struct TCMD_110_INFO{
+	rt_uint16_t	curr_freq;	//abox当前使用的频段 服务器下发的时候默认为0
+	rt_uint16_t num_freq;	//设置的频段数量
+	rt_uint16_t freq;		//[num_freq]//abox频段列表
+}TCMD_110_Info;
+
+
+
+typedef struct NET_ADDR{
+	/* ip address of target*/
+	rt_uint32_t  RT_LWIP_IPADDR0;								
+	rt_uint32_t  RT_LWIP_IPADDR1;						
+	rt_uint32_t  RT_LWIP_IPADDR2;						
+	rt_uint32_t  RT_LWIP_IPADDR3;		 // 自己的ip
+
+	/* mask address of target*/
+	rt_uint32_t RT_LWIP_MSKADDR0;							
+	rt_uint32_t RT_LWIP_MSKADDR1;							
+	rt_uint32_t RT_LWIP_MSKADDR2;							
+	rt_uint32_t RT_LWIP_MSKADDR3;
+
+	/* gateway address of target*/
+	rt_uint32_t RT_LWIP_GWADDR0;				
+	rt_uint32_t RT_LWIP_GWADDR1;					
+	rt_uint32_t RT_LWIP_GWADDR2;								
+	rt_uint32_t RT_LWIP_GWADDR3;								
+
+
+}NET_ADDR;
+
+/* AT device information collection for array */
+#define TYPE_AT_DEVICE_NUM 3
+enum AT_DEVICE_TPYE{
+	AT_SUB_G,
+	AT_M26,
+	AT_EC20,
+	AT_NULL,
+};
+
+
+
+extern stCdmaInfo	Cdma_Info;
+extern stSysSetup	Sys_Setup;
+
+extern CMD_162_Info cmd_162_info; 
+extern 	struct rt_spi_device * sub_spi_device;
+extern struct rt_event exchange_event; 
+extern NET_ADDR net_addr;
+
+
+/* Check way */
+extern rt_uint16_t  ModbusCrc16(rt_uint8_t * frame, rt_uint16_t len);
+extern rt_uint16_t CcittCrc16(rt_uint8_t *buff, rt_uint16_t len);
+
+
+/* public function */
+
+
+//void at_print_ctrl(int off);
+void data_left(rt_uint8_t *buf,rt_uint32_t len,rt_uint32_t buf_size);
+void HWReboot(void);
+void mq_send(int mq_type,void *send,rt_uint32_t len,int eventType);
+rt_err_t mq_recv(int mq_type,void *recv,rt_uint16_t len,int time);
+
+
+char Read_top_tray_status(void);		  // ver : top tray		
+void g3_send_pack(char *send, rt_uint16_t len,int eventType);//len = data length
+
+err_t cdma_rev_pack(rt_uint8_t *precv,int mqType);
+void mq_create(Message_Queue_Info *mq_arry,rt_uint8_t mq_num);
+void file_sys_err_func(void);
+void close_server(void);
+
+
+
+#endif
+

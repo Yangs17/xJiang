@@ -1,0 +1,10 @@
+.\build\components.o: ..\Libraries\kernel\components.c
+.\build\components.o: ..\include\rthw.h
+.\build\components.o: ..\include\rtthread.h
+.\build\components.o: ..\applications\rtconfig.h
+.\build\components.o: ..\include\rtdebug.h
+.\build\components.o: ..\include\rtdef.h
+.\build\components.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\components.o: ..\include\rtservice.h
+.\build\components.o: ..\include\rtm.h
+.\build\components.o: ..\include\rtthread.h

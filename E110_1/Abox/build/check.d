@@ -1,0 +1,9 @@
+.\build\check.o: ..\applications\check.c
+.\build\check.o: ..\include\rtthread.h
+.\build\check.o: ..\applications\rtconfig.h
+.\build\check.o: ..\include\rtdebug.h
+.\build\check.o: ..\include\rtdef.h
+.\build\check.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\check.o: ..\include\rtservice.h
+.\build\check.o: ..\include\rtm.h
+.\build\check.o: ..\include\rtthread.h

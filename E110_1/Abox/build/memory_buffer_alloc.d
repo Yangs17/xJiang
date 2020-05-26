@@ -1,0 +1,12 @@
+.\build\memory_buffer_alloc.o: ..\mbedtls\mbedtls\library\memory_buffer_alloc.c
+.\build\memory_buffer_alloc.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\memory_buffer_alloc.o: ..\include\rtthread.h
+.\build\memory_buffer_alloc.o: ..\applications\rtconfig.h
+.\build\memory_buffer_alloc.o: ..\include\rtdebug.h
+.\build\memory_buffer_alloc.o: ..\include\rtdef.h
+.\build\memory_buffer_alloc.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\memory_buffer_alloc.o: ..\include\rtservice.h
+.\build\memory_buffer_alloc.o: ..\include\rtm.h
+.\build\memory_buffer_alloc.o: ..\include\rtthread.h
+.\build\memory_buffer_alloc.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\memory_buffer_alloc.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h

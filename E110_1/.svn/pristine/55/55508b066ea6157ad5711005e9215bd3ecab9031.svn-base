@@ -1,0 +1,430 @@
+/*
+ * File      : stm32_usbh.c
+ * This file is part of RT-Thread RTOS
+ * COPYRIGHT (C) 2015, RT-Thread Development Team
+ *
+ * The license and distribution terms for this file may be
+ * found in the file LICENSE in this distribution or at
+ * http://www.rt-thread.org/license/LICENSE
+ *
+ * Change Logs:
+ * Date           Author            Notes
+ * 2017-10-30     ZYH            the first version
+ */
+#include "drv_usbh.h"
+
+#include <rtdevice.h>
+#include "board.h"
+
+#include <stm32f4xx.h>
+ 
+//#include "ctrl.h" 
+#include "ff.h"  
+#include "exfuns.h"    
+#include "usbh_usr.h" 
+#include <usbh_core.h>
+#include <usb_core.h>
+#include "abox.h"
+USBH_HOST  USB_Host;
+USB_OTG_CORE_HANDLE  USB_OTG_Core;
+usbh_info usbhInfo; 
+
+
+
+/*****************
+DHCP mode:1        //0 disconnect  1静态   2动态
+IP address:192.168.2.111
+msak address:255.255.255.0
+gateway address:192.168.2.1
+******************/
+
+
+/***********
+cbuf : check buf
+bsize: check length
+ch   : searched character
+sbuf : save subscript's buf
+
+return: if 0  NULL
+***********/
+int searchCharacter(char *cbuf,int bsize,char ch,rt_uint32_t *sbuf)
+{
+	if(!cbuf || !sbuf) return -1;
+	
+	int i = 0;
+	int j = 0;
+	for(i=0;i<bsize;i++)
+	{
+		if(cbuf[i] == ch)
+		{	
+			sbuf[j] = i;
+			j++;
+		}
+	}
+
+	return j ;
+	
+}
+
+/* clear buff */
+void clearStrInfo(char *str,rt_uint16_t strLen)
+{
+	if(!str) return;
+	rt_uint16_t i = 0;
+	for(i=0;i<strLen;i++)
+	{
+		if((str[i] <'0' || str[i] >'9') && str[i] != '.')
+			str[i] = 0;
+	}
+	
+}
+
+
+rt_err_t handleSerNetConfigFile(serverNet_information *serNetConfig,char *fileBuf,int fileSize)
+{
+	rt_uint8_t lineIndex = 0;
+	rt_uint32_t lineLen =  0; 
+	char lineData[LINE_DATA_LEN_MAX] = {0};
+	rt_uint32_t k[LINE_NUM_MAX] = {0};//标记位':'
+	rt_uint32_t j[LINE_NUM_MAX] = {0};//标记位'\r'
+	
+	if(!searchCharacter(fileBuf,fileSize,USB_DATA_MARK1,k)) return RT_ERROR;
+	if(!searchCharacter(fileBuf,fileSize,USB_DATA_MARK2,j)) return RT_ERROR;
+	
+	for(lineIndex=0;lineIndex<LINE_NUM_MAX;lineIndex++)
+	{
+		rt_memset(lineData,0,LINE_DATA_LEN_MAX);
+		lineLen = j[lineIndex]-k[lineIndex];
+
+		if(lineLen > LINE_DATA_LEN_MAX) return RT_ERROR;
+		
+		rt_memcpy(lineData,&fileBuf[k[lineIndex]+1],lineLen);
+		switch (lineIndex)
+		{
+			case CONFIG_STYLE_LINE: //第一行 表示连接方式
+				if(!rt_strncmp("wifi",lineData,4))
+				{
+					serNetConfig->netConfig.configStyle = WIFI_STYLE;
+				}
+				else if(!rt_strncmp("eth or wifi",lineData,11))
+				{
+					serNetConfig->netConfig.configStyle = ETH_WIFI_STYLE;
+				}					
+				else if(!rt_strncmp("eth",lineData,3))
+				{
+					serNetConfig->netConfig.configStyle = ETH_STYLE;
+				}
+				else
+					return RT_ERROR;
+				
+			break;
+				
+		    case DHCP_LINE: //DHCP 是否开启
+				if(!rt_strncmp("open",lineData,4))
+				{
+					serNetConfig->netConfig.ethConfig.status = DHCP_OPEN;
+				}
+				else if(!rt_strncmp("close",lineData,5))
+				{
+					serNetConfig->netConfig.ethConfig.status = DHCP_CLOSE;
+				}
+				else
+					return RT_ERROR;
+			break;
+
+			case IP_ADDR_LINE: //ip addr
+				rt_memcpy(serNetConfig->netConfig.ethConfig.netAddrConfig.ipaddr,lineData,lineLen);
+			break;
+			
+			case MASK_ADDR_LINE: //
+				rt_memcpy(serNetConfig->netConfig.ethConfig.netAddrConfig.ipmaskaddr,lineData,lineLen);
+			break;
+
+			case GATWAY_ADDR_LINE:
+				rt_memcpy(serNetConfig->netConfig.ethConfig.netAddrConfig.ipgatwayaddr,lineData,lineLen);
+			break;
+			
+			case WIFI_LOGIN_ID_LINE:
+				rt_memcpy(serNetConfig->netConfig.wifiConfig.wifiName,lineData,lineLen);
+				if(lineLen<WIFI_NAME_MAX)
+					serNetConfig->netConfig.wifiConfig.wifiName[lineLen-1] = '\0';
+			break;
+
+			case WIFI_PASSWORD_LINE:
+				rt_memcpy(serNetConfig->netConfig.wifiConfig.wifiPassword,lineData,lineLen);
+				if(lineLen<WIFI_PASSWORD_MAX)
+					serNetConfig->netConfig.wifiConfig.wifiPassword[lineLen-1] = '\0';
+			break;
+				
+		}
+	}
+
+	clearStrInfo(serNetConfig->netConfig.ethConfig.netAddrConfig.ipaddr,16);
+	clearStrInfo(serNetConfig->netConfig.ethConfig.netAddrConfig.ipmaskaddr,16);
+	clearStrInfo(serNetConfig->netConfig.ethConfig.netAddrConfig.ipgatwayaddr,16);
+
+	return RT_EOK;
+}
+
+
+/* read net file and set file's config */
+rt_err_t readNetSet(FIL *file,serverNet_information *serNetConfig)
+{
+	if(!file || !serNetConfig) return RT_ERROR;
+	if(!file->fsize  || file->fsize > USB_BUF_LEN) return RT_ERROR;
+
+	
+	f_lseek(file,0);
+	rt_memset(usbhInfo.buff,0,USB_BUF_LEN);
+	usbhInfo.blen = 0;
+
+	/* get usb set infomation.*/
+	f_read(file,usbhInfo.buff,(unsigned int)file->fsize,&usbhInfo.blen);
+	if(usbhInfo.blen)
+	{
+	 	return	handleSerNetConfigFile(serNetConfig,usbhInfo.buff,file->fsize);
+	} 
+
+	return RT_EOK;
+
+}
+
+
+
+/*
+	RT_EOK: 	updata is OK.
+	RT_ERROR:   updata is error.
+*/
+rt_err_t updataSet(FIL *file)
+{
+	if(!file) return RT_ERROR;
+	if(!file->fsize) return RT_ERROR;
+
+	rt_uint32_t s_addr = UPDATA_APP_ADDR;
+	rt_uint8_t  readTime = 1;
+	
+	f_lseek(file,0);
+	rt_memset(usbhInfo.buff,0,USB_BUF_LEN);
+	usbhInfo.blen = 0;
+
+	while(HCD_IsDeviceConnected(&USB_OTG_Core))//设备连接成功
+	{
+		//IWDG_Feed();
+		
+		/* get usb_set infomation.*/
+		f_read(file,usbhInfo.buff,USB_BUF_LEN,&usbhInfo.blen);
+
+		/* file's head */
+		if(readTime)
+		{	
+			readTime = 0;
+			rt_uint32_t ver = 0;
+			rt_memcpy(&ver,usbhInfo.buff+4*7,4);
+
+			/* check version */
+			if((ver >= APPF_VER_LOWER) && (ver < APPF_VER_CEILING))
+			{
+				clearSaveDataSector();
+				//IWDG_Feed();
+				writeByteToFlash(s_addr,(rt_uint8_t *)(&file->fsize),4);
+				s_addr += 4;
+				rt_kprintf("usb app get:%d \r\n",ver);
+			}
+			else
+			{
+				rt_kprintf("usb app ver is %d,it's not allowed.\r\n",ver);
+				break;
+			}
+			
+		}
+		
+		if(usbhInfo.blen)
+		{
+			writeByteToFlash(s_addr,(rt_uint8_t *)usbhInfo.buff,usbhInfo.blen);
+			s_addr += usbhInfo.blen;
+		}
+
+		/* file's tail */
+		if(usbhInfo.blen < USB_BUF_LEN)
+		{
+			wwdg_auto_close();
+			return checkFlashFile();
+		}
+
+	}
+
+	return RT_ERROR;
+
+}
+
+/* 1 connect 0 disconnect */
+rt_uint32_t USB_ConnectStatus()
+{
+ 	return	HCD_IsDeviceConnected(&USB_OTG_Core);
+}
+
+
+
+//用户测试主程序
+//返回值:0,正常
+//       1,有问题
+/*****************
+面对天线 从右往左 分别为 1 2 3 4 灯
+
+插入U盘
+1灯 常亮表示 程序烧写OK  长灭表示程序未烧写
+2灯 常亮表示 net 烧写OK  长灭表示net未烧写
+3 4灯长灭
+*****************/
+u8 USH_User_App(void)
+{
+	u32 total= 0,free= 0;
+	u8 res=0;
+	u8 ret = 0;
+	serverNet_information serNetConfig;
+//	u32 bw = 0;	
+	
+    f_mount(fs[2],"2:",1); 	//重新挂载U盘
+	res=exf_getfree("2:",&total,&free);
+	if(res==0x0D)
+	{
+		// reset
+		res=f_mkfs("2:",1,4096);//
+	} 
+
+	usbhInfo.netMark = DEFAULT_MARK;
+	usbhInfo.appMark = DEFAULT_MARK;
+
+	wwdg_auto_open();
+	while(HCD_IsDeviceConnected(&USB_OTG_Core))//设备连接成功
+	{	
+		//IWDG_Feed();
+		if(usbhInfo.netMark == DEFAULT_MARK || usbhInfo.appMark == DEFAULT_MARK)
+		{
+			/* net set */
+			ret = f_open(file, NET_SETTING,FA_OPEN_EXISTING |FA_READ);
+			if(ret  == FR_OK)
+			{ 			
+			 
+				if(RT_EOK == readNetSet(file,&serNetConfig))
+				{
+					controlServerInfo(WRITE_NETCONFIG_INFO,&serNetConfig);
+					usbhInfo.netMark = NET_SET_OK;
+				}
+				else
+				{	
+					rt_kprintf("net set error!\r\n");
+					usbhInfo.netMark = NET_SET_ERR;
+				}
+
+				f_close(file);
+			}
+			else
+			{
+				usbhInfo.netMark = NET_SET_ERR;
+			}
+
+			/* updata set */
+			ret = f_open(file, APP_PROGRAM,FA_OPEN_EXISTING |FA_READ);
+			if(ret  == FR_OK)
+			{ 			
+				if(RT_EOK == updataSet(file))
+				{
+					usbhInfo.appMark = APP_SET_OK;
+				}		
+				else
+				{
+					usbhInfo.appMark = APP_SET_ERR;
+				}
+					
+				f_close(file);
+			}
+			else
+			{
+				usbhInfo.appMark = APP_SET_ERR;	
+			}
+			
+
+		}		
+
+		if(usbhInfo.netMark == NET_SET_OK)
+			GPIO_ResetBits(LED_GAF, LED_CAN);//亮
+		else
+			GPIO_SetBits(LED_GAF, LED_CAN);//灭
+
+
+		if(usbhInfo.appMark == APP_SET_OK)
+			GPIO_ResetBits(LED_GAF, LED_BOX);
+		else
+			GPIO_SetBits(LED_GAF, LED_BOX);
+
+		GPIO_SetBits(LED_GAF, LED_MON);
+		GPIO_SetBits(LED_GAF, LED_ROOF);
+
+		//rt_thread_delay(50);
+	}
+	//rt_exit_critical();
+
+	/*close file and filesystem*/
+	f_mount(0, NULL,0); //delay mount
+	f_mount(0,"2:",1); 	//卸载U盘
+
+	if((usbhInfo.netMark == NET_SET_OK) || (usbhInfo.appMark == APP_SET_OK))
+	{
+		rt_kprintf("usb set is OK!\r\n");
+		cmd_reboot();
+	}
+
+	wwdg_auto_close();
+	return 1;
+} 
+
+
+void usbDefault()
+{
+	usbhInfo.netMark = DEFAULT_MARK;
+	usbhInfo.appMark = DEFAULT_MARK;
+	usbhInfo.blen    = 0;
+	rt_memset(usbhInfo.buff, 0, USB_BUF_LEN);
+}
+
+
+
+void rt_usbDisk_thread_entry(void *parameter)
+{
+	usbDefault();
+	exfuns_init();	
+	//初始化USB主机
+	USBH_Init(&USB_OTG_Core,USB_OTG_FS_CORE_ID,&USB_Host,&USBH_MSC_cb,&USR_Callbacks);  
+	rt_thread_delay(2000);
+	while(1)
+	{
+		USBH_Process(&USB_OTG_Core, &USB_Host);
+	}	
+
+}
+
+
+int stm_usbh_register(void)
+{
+	
+	rt_thread_t tid;
+	tid = rt_thread_create("usbDisk",
+						   rt_usbDisk_thread_entry, RT_NULL,
+						   512*4, 0x11, 20);
+
+	if (tid != RT_NULL) rt_thread_startup(tid);
+
+    return RT_EOK;
+
+}
+INIT_DEVICE_EXPORT(stm_usbh_register);
+
+
+
+
+
+
+
+
+

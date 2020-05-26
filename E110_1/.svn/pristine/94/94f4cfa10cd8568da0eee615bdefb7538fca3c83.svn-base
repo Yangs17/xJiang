@@ -1,0 +1,297 @@
+/*
+ * board.c - CC3100-STM32F4 platform configuration functions
+ *
+ * Copyright (C) 2014 Texas Instruments Incorporated - http://www.ti.com/ 
+ * 
+ * 
+ *  Redistribution and use in source and binary forms, with or without 
+ *  modification, are permitted provided that the following conditions 
+ *  are met:
+ *
+ *    Redistributions of source code must retain the above copyright 
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ *    Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the 
+ *    documentation and/or other materials provided with the   
+ *    distribution.
+ *
+ *    Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+ *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+ *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+*/
+
+#include "stm32f4xx.h"
+//#include "stm32f407xx.h"
+//#include "stm32f4xx_hal.h"
+
+//#include "stm32f4xx_hal_tim.h"
+//#include "stm32f4_discovery.h"
+//#include "stm32f4xx_hal_gpio.h"
+
+#include "net_config.h"
+//#include "daignostic.h"
+#include "rtthread.h"
+#include "si4463.h"
+#include "mydef.h"
+
+//IRQ PD0
+//nHIB PD1
+/* PA0 for HOST-IRQ*/
+#define MCU_IRQ_PIN         PIN0
+#define MCU_IRQ_PORT        GPIOD
+#define MCU_nHIB_PORT       GPIOD   	//switch CC3100
+#define MCU_nHIB_PIN        PIN1  
+
+#define RTC_ASYNCH_PREDIV   0x7F
+#define RTC_SYNCH_PREDIV    0x0130
+
+#define PULSE1_VALUE        60000       /* 1s  */
+
+
+
+/**/
+P_EVENT_HANDLER     pIrqEventHandler = 0;
+//RTC_HandleTypeDef   RTCHandle;
+//TIM_HandleTypeDef   TimHandle;
+//TIM_OC_InitTypeDef  sConfig;
+
+/* Globals */
+unsigned long g_ulTimerInts = 0;
+
+/* Static function declarations */
+static void EXTILine0_Config(rt_uint8_t enable);
+//static void GPIO_Init(GPIO_TypeDef  *GPIO_PORT, unsigned short GPIO_PIN);
+static void GPIO_PinOutSet(GPIO_TypeDef  *GPIO_PORT, unsigned short GPIO_PIN);
+static void GPIO_PinOutClear(GPIO_TypeDef  *GPIO_PORT, unsigned short GPIO_PIN);
+//static rt_sem_t wifi_lock;
+
+/*
+ * STATIC FUNCTION DEFINITIONS -- End
+ */
+/* 
+void wifiSemInit(void)
+{
+	wifi_lock = rt_sem_create("wifi_lock",0,RT_IPC_FLAG_FIFO);
+	wifi_lock->value = 0;
+}
+
+void relaseWifiSem(void)
+{
+	if(RT_EOK == returnServerLinkStatus())
+	{
+		rt_sem_release(wifi_lock);	
+		wifi_lock->value = 1;
+	}
+}
+
+rt_err_t acquireWifiSem(rt_uint32_t timeout)
+{
+	return rt_sem_take(wifi_lock, timeout);
+}
+*/
+
+
+//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
+
+/*!
+    \brief              This function inits the device
+    \param              None
+    \return             None
+    \note
+    \warning
+*/
+#if 0
+void initClk()
+{
+    HAL_Init();
+    SystemClock_Config();
+}
+#endif
+/*!
+    \brief              This function stops The Watch Dog Timer
+    \param              None
+    \return             None
+    \note
+    \warning
+*/
+void stopWDT()
+{
+}
+
+/*!
+    \brief              This function initialize the CC3100 nHIB GPIO
+    \param              None
+    \return             None
+    \note
+    \warning
+*/
+void CC3100_nHIB_init()
+{
+	//GPIO_Init(MCU_nHIB_PORT, MCU_nHIB_PIN);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+	GPIO_Set(MCU_nHIB_PORT,MCU_nHIB_PIN ,GPIO_MODE_OUT,GPIO_OTYPE_PP,GPIO_SPEED_2M,GPIO_PUPD_PD); 
+}
+
+/*!
+    \brief              This function disables CC3100 device
+    \param              None
+    \return             None
+    \note
+    \warning
+*/
+void CC3100_disable()
+{
+    GPIO_PinOutClear(MCU_nHIB_PORT, MCU_nHIB_PIN);
+}
+
+/*!
+    \brief              This function enables CC3100 device
+    \param              None
+    \return             None
+    \note
+    \warning
+*/
+void CC3100_enable()
+{
+    GPIO_PinOutSet(MCU_nHIB_PORT, MCU_nHIB_PIN);
+}
+
+/*!
+    \brief              This function enables waln IrQ pin
+    \param              None
+    \return             None
+    \note
+    \warning
+*/
+void CC3100_InterruptEnable()
+{
+    /* Configure EXTI Line0 (connected to PA0 pin) in interrupt mode */
+    EXTILine0_Config(TRUE);
+}
+
+/*!
+    \brief              This function disables waln IrQ pin
+    \param              None
+    \return             None
+    \note
+    \warning
+*/
+void CC3100_InterruptDisable()
+{
+    EXTILine0_Config(FALSE);
+}
+
+/**
+  * @brief EXTI line detection callbacks
+  * @param GPIO_Pin: Specifies the pins connected EXTI line
+  * @retval None
+  */
+extern P_EVENT_HANDLER	   pIrqEventHandler; 
+void EXTI0_IRQHandler(void)
+{
+	if(NULL != pIrqEventHandler) 
+	{
+		pIrqEventHandler(0);
+	}
+	//relaseWifiSem();
+	EXTI_ClearITPendingBit(EXTI_Line0);//清除LINE4上的中断标志位 
+}
+
+
+/**/
+int registerInterruptHandler(P_EVENT_HANDLER InterruptHdl , void* pValue)
+{
+    pIrqEventHandler = InterruptHdl;
+    return 0;
+}
+
+/*!
+    \brief              Induce delay in ms
+    \param              delay: specifies the delay time length, in milliseconds.
+    \return             None
+    \note
+    \warning
+*/
+void Delay(unsigned long delay)
+{
+    rt_thread_delay(delay);
+}
+
+/**
+  * @brief  Configures EXTI Line0 (connected to PA0 pin) in interrupt mode
+  * @param  None
+  * @retval None
+  */
+static void EXTILine0_Config(rt_uint8_t enable)
+{
+//    GPIO_InitTypeDef   GPIO_InitStructure;
+
+    if (TRUE == enable)
+    {
+       
+		//PD0 -- 上升沿触发       //interrupt
+		//nIRQ  PD0
+		GPIO_Set(MCU_IRQ_PORT,MCU_IRQ_PIN ,GPIO_MODE_IN,0,0,GPIO_PUPD_PU);	
+		
+		NVIC_InitTypeDef   NVIC_InitStructure;
+		EXTI_InitTypeDef   EXTI_InitStructure;
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);//使能SYSCFG时钟
+		SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOD, EXTI_PinSource0);//PD 连接到中断线0
+
+		/* 配置EXTI_Line0 */
+		EXTI_InitStructure.EXTI_Line = EXTI_Line0;
+	    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;//中断事件
+	    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising; //上升沿触发
+	    EXTI_InitStructure.EXTI_LineCmd = ENABLE;//中断线使能
+	    EXTI_Init(&EXTI_InitStructure);//配置
+
+	    NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;//外部中断10~15
+	    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//抢占优先级0
+	    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;//子优先级2
+	    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;//使能外部中断通道
+	    NVIC_Init(&NVIC_InitStructure);//配置
+		
+    }
+    else if(FALSE == enable)
+    {
+        //HAL_NVIC_DisableIRQ(EXTI0_IRQn);
+		NVIC_DisableIRQ(EXTI0_IRQn);
+	}
+}
+
+
+
+
+
+
+
+static void GPIO_PinOutSet(GPIO_TypeDef  *GPIO_PORT,
+                           unsigned short GPIO_PIN)
+{
+	GPIO_SetBits(GPIO_PORT, GPIO_PIN);
+    //HAL_GPIO_WritePin(GPIO_PORT, GPIO_PIN, GPIO_PIN_SET);
+}
+
+static void GPIO_PinOutClear(GPIO_TypeDef  *GPIO_PORT,
+                            unsigned short GPIO_PIN)
+{
+	GPIO_ResetBits(GPIO_PORT, GPIO_PIN);
+    //HAL_GPIO_WritePin(GPIO_PORT, GPIO_PIN, GPIO_PIN_RESET);
+}
+
+
+							

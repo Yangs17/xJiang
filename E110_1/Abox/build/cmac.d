@@ -1,0 +1,12 @@
+.\build\cmac.o: ..\mbedtls\mbedtls\library\cmac.c
+.\build\cmac.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\cmac.o: ..\include\rtthread.h
+.\build\cmac.o: ..\applications\rtconfig.h
+.\build\cmac.o: ..\include\rtdebug.h
+.\build\cmac.o: ..\include\rtdef.h
+.\build\cmac.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\cmac.o: ..\include\rtservice.h
+.\build\cmac.o: ..\include\rtm.h
+.\build\cmac.o: ..\include\rtthread.h
+.\build\cmac.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\cmac.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h

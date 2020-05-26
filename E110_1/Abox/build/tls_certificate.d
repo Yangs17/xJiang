@@ -1,0 +1,14 @@
+.\build\tls_certificate.o: ..\mbedtls\ports\src\tls_certificate.c
+.\build\tls_certificate.o: ..\mbedtls\mbedtls\include\mbedtls/certs.h
+.\build\tls_certificate.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\tls_certificate.o: ..\include\rtthread.h
+.\build\tls_certificate.o: ..\applications\rtconfig.h
+.\build\tls_certificate.o: ..\include\rtdebug.h
+.\build\tls_certificate.o: ..\include\rtdef.h
+.\build\tls_certificate.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\tls_certificate.o: ..\include\rtservice.h
+.\build\tls_certificate.o: ..\include\rtm.h
+.\build\tls_certificate.o: ..\include\rtthread.h
+.\build\tls_certificate.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\tls_certificate.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h
+.\build\tls_certificate.o: D:\keil5\ARM\ARMCC\Bin\..\include\stddef.h

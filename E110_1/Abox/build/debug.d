@@ -1,0 +1,12 @@
+.\build\debug.o: ..\mbedtls\mbedtls\library\debug.c
+.\build\debug.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\debug.o: ..\include\rtthread.h
+.\build\debug.o: ..\applications\rtconfig.h
+.\build\debug.o: ..\include\rtdebug.h
+.\build\debug.o: ..\include\rtdef.h
+.\build\debug.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\debug.o: ..\include\rtservice.h
+.\build\debug.o: ..\include\rtm.h
+.\build\debug.o: ..\include\rtthread.h
+.\build\debug.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\debug.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h

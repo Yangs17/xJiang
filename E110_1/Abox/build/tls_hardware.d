@@ -1,0 +1,14 @@
+.\build\tls_hardware.o: ..\mbedtls\ports\src\tls_hardware.c
+.\build\tls_hardware.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\tls_hardware.o: ..\include\rtthread.h
+.\build\tls_hardware.o: ..\applications\rtconfig.h
+.\build\tls_hardware.o: ..\include\rtdebug.h
+.\build\tls_hardware.o: ..\include\rtdef.h
+.\build\tls_hardware.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\tls_hardware.o: ..\include\rtservice.h
+.\build\tls_hardware.o: ..\include\rtm.h
+.\build\tls_hardware.o: ..\include\rtthread.h
+.\build\tls_hardware.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\tls_hardware.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h
+.\build\tls_hardware.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\build\tls_hardware.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdio.h

@@ -1,0 +1,17 @@
+.\build\ecp_curves.o: ..\mbedtls\mbedtls\library\ecp_curves.c
+.\build\ecp_curves.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\ecp_curves.o: ..\include\rtthread.h
+.\build\ecp_curves.o: ..\applications\rtconfig.h
+.\build\ecp_curves.o: ..\include\rtdebug.h
+.\build\ecp_curves.o: ..\include\rtdef.h
+.\build\ecp_curves.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\ecp_curves.o: ..\include\rtservice.h
+.\build\ecp_curves.o: ..\include\rtm.h
+.\build\ecp_curves.o: ..\include\rtthread.h
+.\build\ecp_curves.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\ecp_curves.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h
+.\build\ecp_curves.o: ..\mbedtls\mbedtls\include\mbedtls/ecp.h
+.\build\ecp_curves.o: ..\mbedtls\mbedtls\include\mbedtls/bignum.h
+.\build\ecp_curves.o: D:\keil5\ARM\ARMCC\Bin\..\include\stddef.h
+.\build\ecp_curves.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdint.h
+.\build\ecp_curves.o: D:\keil5\ARM\ARMCC\Bin\..\include\string.h

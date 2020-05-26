@@ -1,0 +1,28 @@
+#ifndef __MODBUS_TCP_H__
+#define __MODBUS_TCP_H__
+
+
+#include <rtthread.h>
+#include <lwip/sockets.h> 
+#include "rtconfig.h"
+#include "abox.h"
+
+
+
+
+#define MODBUS_SERVER_PORT 		502
+#define MODBUS_SERVER_IP        "192.6.6.120"
+#define MODBUS_SERVER_MASK		"255.255.255.0"
+#define MODBUS_SERVER_GATEWAY   "192.6.6.1"
+#define LISTEN_MEM_MAX          10
+
+
+
+/*
+	1. Ìí¼Ómodbus   TCP server    ------ 2019.11.18 zxy		
+*/
+
+int modbus_tcp_server_init(void);
+
+
+#endif // __MODBUS_TCP_H__

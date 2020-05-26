@@ -1,0 +1,223 @@
+#ifndef __ABOX_H__
+#define __ABOX_H__
+
+#include <rtthread.h>
+#include "board.h"
+#include "ctrl.h"
+#include "rtdevice.h"
+#include "at.h"
+#include "mydef.h"
+#include "sub_G.h"
+#include "setpool.h"
+
+
+
+/* Alarm value for rssi */
+#define RSSI_WARNING 115
+
+
+#define COM_CHANGE_FREQ_ET (1<<1)  //改变abox freq事件
+#define SER_CHANGE_FREQ_ET (1<<2)  //改变abox freq事件
+
+/* NET file */
+#define  APP_PROGRAM    "2:/modInfo/est.bin"
+#define  NET_SETTING    "2:/modInfo/netConfig.ini"
+#define  NET_FILE_NAME  "netConfig.ini"
+
+
+/********************* Cbox information *******************/
+								
+#define PACKAGE_COUNT_START_NUM   		10000  //统计1万包数据之后
+#define PACKAGE_COUNT_START_MAX_NUM     20000  //数据大于2W包之后清空
+#define PACKAGE_COUNT_CRITICAL_VALUE    80     //临界值超过80%删除设备
+
+
+enum CBOX_DEVID_TYPE
+{
+	CBOX_DEVID,
+	PANEL_DEVID,
+	SLAVE1,
+	SLAVE2,
+	SLAVE3,
+	SLAVE4
+};
+
+
+
+typedef struct _cbox_package_send_information 
+{
+	rt_uint8_t 				aboxPackNum;
+	rt_uint8_t 				cboxPackNum;
+}cbox_package_send_infor;
+
+
+
+typedef struct _data_info
+{
+	int			 dataAddr;  				
+	rt_uint32_t	 dataLength;
+}data_info ;
+
+
+enum CBOX_SEND_PACK_RESULT
+{
+	SEND_MARK_ERR,
+	SEND_MARK_OK,
+};
+
+enum SEND_STATUS_RESULT
+{
+	SEND_RESULT_DATA,
+	SEND_RESULT_FAIL,
+	SEND_RESULT_SUCCESS,
+};
+
+/* 动态统计最近的1W包 超过80%出错率 或者 连续出错超过一个周期，删除Cbox */
+typedef struct _cbox_assessment_report
+{
+	/* 统计总包数 为以后数据统计做准备 */
+	rt_uint32_t				packTotal;
+	rt_uint32_t				packErr;
+
+	/* 用于判断 1W-2W包数据的情况 */
+	rt_uint32_t 			packSendNum;  
+	rt_uint32_t				packSendErr;
+
+	/* 超时判断 */
+	rt_tick_t 				errTick1;
+	rt_tick_t				errTick2;
+
+}cbox_assessment_report;
+
+typedef struct _cbox_data_info
+{  				
+	rt_uint8_t				 entryNum;								/* 已存在的数据包数 */
+	data_info 				 cboxDataList[CBOX_MAX_DATA_LIST];
+}cbox_data_info ;
+
+
+typedef struct _cbox_information 
+{
+	rt_uint32_t  			 devidCollection[DEVID_TYPE_NUM];   /* 从Cbox,面板,辅机1~4 按顺序放入  */
+	cbox_package_send_infor  packSendInfo;					   /* 发送包的序列数 */
+	cbox_assessment_report   cboxAssessReport;                  /* 统计Cbox  出错情况 */
+
+	cbox_data_info			 cboxDataInfo;					   /* 对应Cbox下来自服务器的数据 */
+	data_info			     subgDataInfo;					   /* 存储来自cbox的subg信息 */
+	
+}cbox_information;
+
+/********************* Cbox information end *******************/
+
+
+
+
+
+/********************* Abox information *******************/
+
+#define POOL_SIZE (10*1024)  
+
+enum ABOX_THREAD_PRIORITY 
+{
+	AOX_EX_PRI = 0xf, 
+	SUB_A_PRI = 0xe,	
+	
+	TCP_SEND_PRI  = 0xd, 
+	TCP_RECV_PRI = 0x10,
+	//TCP_WIFI_RECV_PRI = 0x10,
+
+	USB_SET_PRI  = 0X17,
+	LED_SET_PRI  = 0x18,
+	ADC_GET_PRI  = 0X17
+		
+};
+
+
+
+typedef struct _cbox_total_information
+{
+	rt_uint32_t  			  cboxOnlineNum; 
+	cbox_information          cboxInfo[CBOX_MAX_NUM];       
+}cbox_total_information;
+
+
+typedef struct _package_information
+{
+	rt_uint32_t 		      packageSendNum; 		  
+	rt_uint32_t 		      packageWrongNum;	             
+}package_information;
+
+
+
+typedef struct _freq_information
+{
+	rt_uint16_t 		      preFreq; //集合里面的下标值
+	rt_uint16_t               freqSaveNum;//保存的freq的数量
+	rt_uint16_t 		      freqCollect[RF_FREQ_CONTROL_INTE_8_NUM];//freq 集合	             
+}freq_information;
+
+
+#define CBOXDATAPOOLSIZE	(5*1024)
+#define SUBGDATAPOOLSIZE	(2*1024)
+
+typedef struct _abox_information
+{
+	package_information		  packageInfo;						/* 发送信息保存 */
+	filter_information        filterInfo;						/* 过滤器设置 */
+	cbox_total_information    cboxTotalInfo;					/* cbox信息集合 */
+	freq_information		  freqInfo;							/* 频段信息 */
+
+	pool_setting *			  cboxDataPool;					   /* 对应Cbox下来自服务器的数据 */
+	pool_setting *			  subgDataPool;					   /* 存储来自cbox的subg信息 */
+
+	rt_event_t				  aboxEvent;					   /* 处理Abox 事件 */
+}abox_information;
+
+/********************* Abox information end *******************/
+
+
+extern abox_information aboxInfo;
+extern Message_Queue_Info aboxMqInfo[ABOX_MQ_NUM];
+extern void cmd_reboot(void);
+extern rt_uint8_t        Eth_Rev_Buff [BUFF_LEN*2];
+extern rt_uint16_t       Eth_recv_len;
+extern rt_err_t  checkFreqInfo(freq_information * freqInfo);
+
+/* Abox function */
+void exchange_Abox_init(void);
+int Abox_send_pack(char *send, rt_uint16_t len,int event_type);//len = packcmd + data length
+void Abox_DEV_USER_GET_SSTATUS(char *rev); 
+void send_ADC_Info(rt_uint8_t *sendinfo);
+void data_send(int data_type,char *send,rt_uint16_t len,int event_type);
+void tcp_send_ser(void);
+void recvServerData(rt_uint8_t *recv);
+void removeCbox(rt_uint8_t removeIndex);
+void cleanCbox(void);
+void listReport(void);
+void STMFLASH_ReadMoreByte(u32 ReadAddr,u8 *pBuffer,u32 NumToRead);  
+void ser_heart(void);
+void sendNormalData(rt_uint8_t *sendBuf,rt_uint32_t len);
+
+/* flash */
+rt_err_t clearSaveDataSector(void);
+rt_err_t writeByteToFlash(rt_uint32_t writeAddr,rt_uint8_t *data,rt_uint32_t len);
+rt_uint16_t STMFLASH_GetFlashSector(u32 addr);
+void saveNetAddr(net_addr_config *net);
+void getAppVertion(rt_uint32_t *ver);
+void STMFLASH_Read(u32 ReadAddr,u32 *pBuffer,u32 NumToRead);   	
+
+u32 STMFLASH_ReadWord(u32 faddr);
+void setSecret_1(u32 WriteAddr,rt_uint8_t *pBuffer);
+void STMFLASH_Write(u32 WriteAddr,u32 *pBuffer,u32 NumToWrite);	
+
+rt_err_t  initFreqInfo(freq_information *freqInfo);
+void saveFreqInfo(freq_information *freqInfo);
+void sendDataToServer(char sendType,rt_uint8_t *sendBuf,rt_uint32_t len);
+rt_err_t checkFlashFile(void);
+
+/* client */
+void processDataFromServer(void);
+
+
+#endif
+

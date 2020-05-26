@@ -1,0 +1,13 @@
+.\build\pkcs11.o: ..\mbedtls\mbedtls\library\pkcs11.c
+.\build\pkcs11.o: ..\mbedtls\mbedtls\include\mbedtls/pkcs11.h
+.\build\pkcs11.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\pkcs11.o: ..\include\rtthread.h
+.\build\pkcs11.o: ..\applications\rtconfig.h
+.\build\pkcs11.o: ..\include\rtdebug.h
+.\build\pkcs11.o: ..\include\rtdef.h
+.\build\pkcs11.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\pkcs11.o: ..\include\rtservice.h
+.\build\pkcs11.o: ..\include\rtm.h
+.\build\pkcs11.o: ..\include\rtthread.h
+.\build\pkcs11.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\pkcs11.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h

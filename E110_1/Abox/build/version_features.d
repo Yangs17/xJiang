@@ -1,0 +1,14 @@
+.\build\version_features.o: ..\mbedtls\mbedtls\library\version_features.c
+.\build\version_features.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\version_features.o: ..\include\rtthread.h
+.\build\version_features.o: ..\applications\rtconfig.h
+.\build\version_features.o: ..\include\rtdebug.h
+.\build\version_features.o: ..\include\rtdef.h
+.\build\version_features.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\version_features.o: ..\include\rtservice.h
+.\build\version_features.o: ..\include\rtm.h
+.\build\version_features.o: ..\include\rtthread.h
+.\build\version_features.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\version_features.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h
+.\build\version_features.o: ..\mbedtls\mbedtls\include\mbedtls/version.h
+.\build\version_features.o: D:\keil5\ARM\ARMCC\Bin\..\include\string.h

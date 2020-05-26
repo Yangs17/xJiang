@@ -1,0 +1,17 @@
+.\build\platform.o: ..\mbedtls\mbedtls\library\platform.c
+.\build\platform.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\platform.o: ..\include\rtthread.h
+.\build\platform.o: ..\applications\rtconfig.h
+.\build\platform.o: ..\include\rtdebug.h
+.\build\platform.o: ..\include\rtdef.h
+.\build\platform.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\platform.o: ..\include\rtservice.h
+.\build\platform.o: ..\include\rtm.h
+.\build\platform.o: ..\include\rtthread.h
+.\build\platform.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\platform.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h
+.\build\platform.o: ..\mbedtls\mbedtls\include\mbedtls/platform.h
+.\build\platform.o: ..\mbedtls\mbedtls\include\mbedtls/platform_time.h
+.\build\platform.o: D:\keil5\ARM\ARMCC\Bin\..\include\time.h
+.\build\platform.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdio.h
+.\build\platform.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdlib.h

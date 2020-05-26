@@ -1,0 +1,1375 @@
+
+#include <rtthread.h>
+#include <finsh.h>
+#include <ctrl.h>
+
+#include "msh.h"
+#include "mydef.h"
+#include "sub_G.h"
+
+
+#include "abox.h"
+
+
+#ifdef RT_USING_FINSH
+#ifdef FINSH_USING_MSH
+
+#ifdef DFS_USING_WORKDIR
+extern char working_directory[];
+#endif
+#include "board.h"
+
+void	cmd_reboot(void)
+{	
+	rt_kprintf("reboot box!\r\n");
+
+	__disable_fault_irq();  
+	NVIC_SystemReset();	
+}
+
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_reboot, __cmd_reboot, Reboot system.);
+
+//#define CLS     "\033[2J"
+int cmd_cls(int argc, char** argv)
+{
+		rt_kprintf("\033[2J");	
+		return 0;
+}
+
+int cmd_ps(int argc, char** argv)
+{
+    extern long list_thread(void);
+	
+    list_thread();
+	
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_ps, __cmd_ps, List threads in the system.);
+int cmd_sem(int argc, char** argv)
+{
+		extern long list_sem(void);	
+	  list_sem();		
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_sem, __cmd_sem, List sem in the system.);
+
+int cmd_event(int argc, char** argv)
+{
+		extern long list_event(void);		
+		list_event();
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_event, __cmd_event, List event in the system.);
+
+int cmd_mt(int argc, char** argv)
+{
+	extern long list_mutex(void);	
+	list_mutex();		
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_mt, __cmd_mt, List mutex in the system.);
+
+
+int cmd_quit(int argc, char** argv)
+{
+	extern void quitTcpConnect(void);
+	quitTcpConnect();
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_quit, __cmd_quit, Quit connect.);
+
+
+
+int cmd_mb(int argc, char** argv)
+{
+		extern long list_mailbox(void);	
+
+		list_mailbox();	
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_mb, __cmd_mb, List mailbox in the system.);
+int cmd_mq(int argc, char** argv)
+{
+		extern long list_msgqueue(void);
+		list_msgqueue();
+	
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_mq, __cmd_mq, List msgqueue in the system.);
+#ifdef RT_USING_MEMPOOL
+int cmd_memp(int argc, char** argv)
+{
+		extern long list_mempool(void);
+		list_mempool();
+    return 0;	
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_memp, __cmd_memp, List mempool in the system.);
+#endif
+// int cmd_memh(int argc, char** argv)
+// {
+// 		extern long list_memheap(void);
+// 		long list_memheap();
+//     return 0;	
+// }
+// FINSH_FUNCTION_EXPORT_ALIAS(cmd_memh, __cmd_memh, List memhead in the system.);
+int cmd_timer(int argc, char** argv)
+{
+		extern long list_timer(void);
+		list_timer();
+    return 0;	
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_timer, __cmd_timer, List timer in the system.);
+
+int cmd_device(int argc, char** argv)
+{
+		extern long list_device(void);
+		list_device();
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_device, __cmd_device, List device in the system.);
+
+
+int cmd_free(int argc, char** argv)
+{
+    extern void list_mem(void);
+
+    list_mem();
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_free, __cmd_free, Show the memory usage in the system.);
+
+#ifdef RT_USING_DFS
+#include <dfs_posix.h>
+char Path[80];
+char * get_path(char *path)
+{	
+		getcwd(Path, RT_CONSOLEBUF_SIZE - 8);	
+		strcat(Path, "/");
+		if (*path == '/')
+			strcpy(Path, path);
+		else
+			strcat(Path, path);
+//rt_kprintf("path = %s\n", Path);
+		return Path;
+}
+
+int cmd_ls(int argc, char** argv)
+{
+    extern void ls(const char *pathname);
+		
+    if (argc == 1)
+    {
+#ifdef DFS_USING_WORKDIR
+        ls(working_directory);
+#else
+        ls("/");
+#endif
+    }
+    else 
+    {
+        ls(get_path(argv[1]));
+    }
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_ls, __cmd_dir, List information about the FILEs.);
+
+int cmd_cp(int argc, char** argv)
+{
+    extern int copy(const char *src, const char *dst);
+
+    if (argc != 3)
+    {
+        rt_kprintf("Usage: cp SOURCE DEST\n");
+    }
+    else
+    {
+        copy(argv[1], argv[2]);
+    }
+
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_cp, __cmd_copy, Copy SOURCE to DEST.);
+
+int cmd_mv(int argc, char** argv)
+{
+		extern int	move(const char *srcfile, const char *destfile);	
+	
+    if (argc != 3)
+    {
+        rt_kprintf("Usage: mv SOURCE DEST\n");
+//        rt_kprintf("Rename SOURCE to DEST, or move SOURCE(s) to DIRECTORY.\n");
+    }
+    else
+    {
+				move(argv[1], argv[2]);
+    }
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_mv, __cmd_mv, Move SOURCE to DEST.);
+
+int cmd_cat(int argc, char** argv)
+{
+    int index;
+    extern void cat(const char* filename);
+
+    if (argc == 1)
+    {
+        rt_kprintf("Usage: cat [FILE]...\n");
+//        rt_kprintf("Concatenate FILE(s)\n");
+				return 0;
+    }
+    for (index = 1; index < argc; index ++)
+    {
+        cat(argv[index]);
+    }
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_cat, __cmd_cat, Concatenate FILE(s).);
+
+int cmd_rm(int argc, char** argv)
+{
+    if (argc == 1)
+    {
+        rt_kprintf("Usage: del Dir\n");
+				return 0;
+    }
+    unlink(argv[1]);
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_rm, __cmd_rd, Del the Dir(s).);
+int cmd_del(int argc, char** argv)
+{
+    extern void rm(const char *filename);
+
+    if (argc == 1)
+    {
+        rt_kprintf("Usage: del FILE or (*.*)\n");
+				return 0;
+    }
+    rm(argv[1]);
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_del, __cmd_del, Del the FILE(s).);
+
+int cmd_cd(int argc, char** argv)
+{
+		extern int chdir(const char *path);
+	
+    if (argc == 1)
+        rt_kprintf("%s\n", working_directory);
+    else if (argc == 2)
+        chdir(argv[1]);
+		
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_cd, __cmd_cd, Change the shell working directory.);
+
+int cmd_pwd(int argc, char** argv)
+{
+	rt_kprintf("%s\n", working_directory);
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_pwd, __cmd_path, Print the name of the current working directory.);
+
+int cmd_mkdir(int argc, char** argv)
+{
+	if (argc == 1)
+		rt_kprintf("Usage: mkdir [OPTION] DIRECTORY\n");
+//		rt_kprintf("Create the DIRECTORY, if they do not already exist.\n");
+	else
+	{
+		mkdir(get_path(argv[1]), 0);
+	}
+
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_mkdir, __cmd_md, Create the DIRECTORY.);
+int cmd_rename(int argc, char** argv)
+{
+	if (argc == 1)
+		rt_kprintf("Usage: rename name1 name2\n");
+//		rt_kprintf("Rename the Filename.\n");		
+	else
+	{
+		if(rename((argv[1]), (argv[2])) < 0) 
+			rt_kprintf("rename error!\n"); 
+	}
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_rename, __cmd_rename, Rename file name.);
+
+// int cmd_mkfs(int argc, char** argv)
+// {
+// 		extern void mkfs(const char *fs_name, const char *device_name);
+
+// 		if (argc == 1)
+// 				rt_kprintf("Usage: format elm(uffs ...) sd0(nand ...)\n");	
+// 		else
+// 		{	
+// 				rt_kprintf("Format start ...\n");
+// 				mkfs(argv[1], argv[2]);
+// 				rt_kprintf("Format ok\n");
+// 		}
+//     return 0;
+// }
+int cmd_mkfs(void)
+{
+		extern void mkfs(const char *fs_name, const char *device_name);
+
+		rt_kprintf("Format start ...\n");
+		mkfs("elm", "flash0");
+		rt_kprintf("Format ok\n");
+
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_mkfs, __cmd_format, Fromat a filesys.)
+int cmd_unmount(int argc, char** argv)
+{
+		extern void mkfs(const char *fs_name, const char *device_name);
+
+		if (argc == 1)
+				rt_kprintf("Usage: unmount / or /sd\n");	
+		else
+				dfs_unmount(argv[1]);
+	
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_unmount, __cmd_unmount, unmount filesys.)
+int cmd_mount(int argc, char** argv)
+{
+		extern void mkfs(const char *fs_name, const char *device_name);
+
+		if (argc == 1)
+				rt_kprintf("Usage: mount sd0 / elm\n");	
+		else
+				dfs_mount(argv[1], argv[2], argv[3], 0, 0);	
+	
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_mount, __cmd_mount, mount filesys.)
+int cmd_ftest(int argc, char** argv)
+{
+		extern void filespeed (const char* filename);
+		if (argc == 1)
+			filespeed ("test");			
+		else
+			filespeed (argv[1]);	
+    return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_ftest, __cmd_ftest, Test R/W FILE Speed.)
+#endif
+
+#ifdef RT_USING_LWIP
+//add 2013-06-20
+int cmd_tcp(int argc, char** argv)
+{
+	extern void list_tcps(void);	
+	list_tcps();
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_tcp, __cmd_tcp, List all of tcp connections.);
+
+int cmd_netif(int argc, char** argv)
+{
+	//extern void list_if(void);	
+	list_if();
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_netif, __cmd_netif, List network interface information.);
+
+
+/*
+int	cmd_tftpget(int argc, char** argv)
+{
+	extern void tftp_get(const char* host, char* filename);
+	tftp_get(argv[1], argv[2]);	
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_tftpget, __cmd_tftpget, Get file from tftp server Usage: tftpget 192.168.1.2 /a.bin);
+
+int	cmd_tftput(int argc, char** argv)
+{
+	extern void  tftp_put(const char* host, char* filename);
+	tftp_put(argv[1], argv[2]);	
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_tftput, __cmd_tftpput, Put file from tftp server Usage: tftpget 192.168.1.2 /a.bin);
+
+int	cmd_ftp(int argc, char** argv)
+{
+	extern void ftpd_start(int s);
+	ftpd_start(argv[1][0]);		
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_ftp, __cmd_ftp, Usage: ftp 0 or 1);
+
+int	cmd_netio(int argc, char** argv)
+{
+	extern void netio_init(void);
+	netio_init();		
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_netio, __cmd_netio, netio server);
+*/
+// int	cmd_ping(int argc, char** argv)
+// {
+// 	extern rt_err_t ping(char* target, rt_uint32_t time, rt_size_t size);
+// 	
+// 	ping("192.168.1.2", 1500, 1024);		
+// 	return 0;
+// }
+// FINSH_FUNCTION_EXPORT_ALIAS(cmd_ping, __cmd_ping, Usage: ping 192.168.1.2 20 1024);
+
+#endif
+
+
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_cls, __cmd_cls, Cls screen.);
+#ifdef RT_USING_RTC
+#include "stm32f4_rtc.h"
+
+int cmd_time(int argc, char** argv)
+{
+		extern rt_err_t set_time(rt_uint32_t hour, rt_uint32_t minute, rt_uint32_t second);
+
+	  rt_uint32_t 	hour, minute, second; 
+	  time_t now;
+    struct tm *p_tm;
+    struct tm tm_new;	
+    /* get current time */
+    now = time(RT_NULL);
+
+    /* lock scheduler. */
+    rt_enter_critical();
+    /* converts calendar time time into local time. */
+    p_tm = localtime(&now);
+    /* copy the statically located variable */
+    memcpy(&tm_new, p_tm, sizeof(struct tm));
+    /* unlock scheduler. */
+    rt_exit_critical();
+	
+    rt_kprintf("The current time is: %02d:%02d:%02d\n", tm_new.tm_hour, tm_new.tm_min, tm_new.tm_sec);
+
+		if (argv[1] != NULL)
+			rt_kprintf("Enter the new time : %s\n", argv[1]);
+		if (argv[1][2] == ':' && argv[1][5] == ':')
+		{
+			argv[1][2] = 0; argv[1][5] = 0; argv[1][8] = 0;
+			hour 		= (argv[1][0] - '0') * 10 + (argv[1][1] - '0');
+			minute  = (argv[1][3] - '0') * 10 + (argv[1][4] - '0');
+			second  = (argv[1][6] - '0') * 10 + (argv[1][7] - '0');
+			if (hour > 24 || minute > 59 || second > 59)
+				rt_kprintf("\r\nTime digit error\n");
+			else
+			{
+				set_time (hour, minute, second);
+			}
+		}
+		else
+		{
+			if (argv[1] != NULL)			
+				rt_kprintf("\nTime format error\n");
+		}
+		return 0;
+}	
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_time, __cmd_time, Display & Set Time Usage: time 11:01:01.);
+int cmd_date(int argc, char** argv)
+{	
+		extern rt_err_t set_date(rt_uint32_t year, rt_uint32_t month, rt_uint32_t day);
+
+	  rt_uint32_t 	year, month, day; 
+	  time_t now;
+    struct tm *p_tm;
+    struct tm tm_new;	
+    /* get current time */
+    now = time(RT_NULL);
+
+    /* lock scheduler. */
+    rt_enter_critical();
+    /* converts calendar time time into local time. */
+    p_tm = localtime(&now);
+    /* copy the statically located variable */
+    memcpy(&tm_new, p_tm, sizeof(struct tm));
+    /* unlock scheduler. */
+    rt_exit_critical();
+    rt_kprintf("The current time is: %04d-%02d-%02d\n", tm_new.tm_year + 1900, tm_new.tm_mon + 1, tm_new.tm_mday);
+
+		if (argv[1] != NULL)	
+			rt_kprintf("Enter the new date : %s\n", argv[1]);
+		if (argv[1][4] == '-' && argv[1][7] == '-')
+		{
+			argv[1][4] = 0; 	argv[1][7] = 0; 	argv[1][10] = 0;
+			year		= (argv[1][0] - '0') * 1000 + (argv[1][1] - '0') * 100 + (argv[1][2] - '0') * 10 + (argv[1][3] - '0');
+			month  	= (argv[1][5] - '0') * 10 + (argv[1][6] - '0');
+			day 	  = (argv[1][8] - '0') * 10 + (argv[1][9] - '0');
+			if (month > 12 || day > 31)
+				rt_kprintf("\r\nDate digit error\n");
+			else
+			{
+				set_date (year, month, day);
+			}
+		}
+		else
+		{
+			if (argv[1] != NULL)			
+				rt_kprintf("\nDate format error\n");
+		}
+		return 0;
+}	
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_date, __cmd_date, Display & Set Date Usage: date 2000-01-01.);
+
+
+
+
+
+
+
+
+#include "stm32f4xx_rcc.h"
+int	cmd_clk(int agc, char **argv)
+{
+		RCC_ClocksTypeDef  rcc_clocks;
+	  RCC_GetClocksFreq(&rcc_clocks);
+		rt_kprintf("Freq: OSC = %dM, CPU = %dM, Hclk = %dM, Pclk1 = %dM, Pclk2 = %dM\n", 
+							 HSE_VALUE / 1000000,
+							 rcc_clocks.SYSCLK_Frequency / 1000000, rcc_clocks.HCLK_Frequency  / 1000000, 
+							 rcc_clocks.PCLK1_Frequency  / 1000000, rcc_clocks.PCLK2_Frequency / 1000000);
+		return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_clk, __cmd_clk, Display clocks.);
+
+#include "ctrl.h"
+#ifdef RT_GPS_USING
+int	cmd_gps(int argc, char **argv)
+{
+		extern stGpsRmc		Gps_Rmc;
+	
+		rt_kprintf("\033[2J");		
+//		rt_kprintf("time = %ld ,flag = %c, sn = %ld ,snstr = %c, ew = %ld, ewstr = %c\n", Gps_Rmc.time,
+//							Gps_Rmc.flag, Gps_Rmc.sn, Gps_Rmc.strsn, Gps_Rmc.ew, Gps_Rmc.strew);
+//		rt_kprintf("speed = %d, direct = %d, date = %ld, dew = %d, ew = %c\n",
+//							Gps_Rmc.speed, Gps_Rmc.direct, Gps_Rmc.date, Gps_Rmc.directew, Gps_Rmc.dew);
+
+//	rt_kprintf("DATE: %u ,flag = %c, sn = %ld ,snstr = %c, ew = %ld, ewstr = %c\n", Gps_Rmc.date, Gps_Rmc.time,
+//							Gps_Rmc.flag, Gps_Rmc.sn, Gps_Rmc.strsn, Gps_Rmc.ew, Gps_Rmc.strew);
+//		rt_kprintf("speed = %d, direct = %d, date = %ld, dew = %d, ew = %c\n",
+//							Gps_Rmc.speed, Gps_Rmc.direct, Gps_Rmc.date, Gps_Rmc.directew, Gps_Rmc.dew);	
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_gps, __cmd_gps, Display gps.);
+#endif
+
+
+rt_err_t updata_mdn(char *mdn_info)
+{
+	if(!mdn_info) return RT_ERROR;
+	if (strlen(mdn_info) != 14) return RT_ERROR;
+
+	rt_kprintf("Enter the new MDN : %s\n\r",mdn_info);	
+	rt_kprintf("mdn saves ok!");	
+	rt_memcpy(Sys_Setup.mdn,mdn_info,13);
+	SaveSetup(&Sys_Setup);
+
+	return RT_EOK;
+}
+
+
+
+#include "wwdg.h"
+int cmd_setmdn(int argc, char** argv)
+{
+	at_print_close();
+
+	rt_size_t len = 0;
+	rt_size_t len1 = 0;
+	rt_err_t ret = 0;
+	
+	rt_device_t fin_dev = rt_console_get_device();
+	char s_buf[20];
+  rt_memset(s_buf,0,20);
+	
+	rt_kprintf("/***********setmdn start********/\n\r");
+	rt_kprintf("Enter block 'Enter' to sure mdn;\n");
+	rt_kprintf("Enter block 'R' to rewrite mdn;\n");
+	rt_kprintf("Enter block 'Backspce' to delete the previous character;\n");
+	rt_kprintf("Enter block 'Esc' to quit thisoperation.\n\n");
+
+	rt_kprintf("This BOX mdn = %s\n\r", Sys_Setup.mdn);
+	rt_kprintf("Usage: please enter 13 characters.\n");
+	rt_kprintf("Please input new mdn: \n");
+
+   	while(1)
+   	{
+		len = rt_device_read(fin_dev, 0, s_buf+len1,sizeof(s_buf)-len1);
+		len1 += len; 
+		if(len)
+		{
+			switch(s_buf[len1-1])
+			{
+				case 0x1b:  //esc
+				{
+					rt_kprintf("\r\n");					
+					rt_kprintf("BOX mdn = %s\n\r", Sys_Setup.mdn);		
+					at_print_open();
+					rt_kprintf("/***********end********/\n\r");
+					return 0;						
+				}
+
+				case 0x0d: //enter
+				{
+					rt_kprintf("\r\n");
+					
+					ret = updata_mdn(s_buf);
+					if(ret == RT_EOK)
+						return 0;
+					else
+						len1 = 21;  //re-enter
+				}
+				break;
+
+				case 'r':
+				{
+					rt_kprintf("\r\n");
+					len1 = 11; 
+				}
+				break;
+
+				case 0x08: //backspace
+				{
+					rt_kprintf("\r\n");
+					/* delete 'r' */
+					s_buf[len1-1] = 0;
+					len1 --;
+
+					/* delete the last character. */
+					s_buf[len1-1] = 0;
+					len1 --;
+					
+					
+					rt_kprintf("You have deleted a character!\r\n");
+					rt_kprintf("Please input new mdn: \n");
+					rt_kprintf("%s",s_buf);
+				}
+				break;
+				
+				default:
+				   rt_kprintf("%c",s_buf[len1-1]);
+				break;
+
+			}
+		}
+
+		if(len1>20)
+		{
+			rt_kprintf("Usage: please enter 13 characters.\n");
+			rt_memset(s_buf,0,20);
+			len = 0; 
+			len1 = 0;
+		}
+
+
+	}
+	
+//	at_print_open();	
+//	return 0;
+
+}	
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_setmdn, __cmd_setmdn, Set mdn.);
+
+
+rt_err_t updata_id(char *id_info)
+{
+	rt_uint32_t mod_id = 0;
+	if(!id_info) return RT_ERROR;
+	
+
+	rt_kprintf("Enter the new ID : %s\n\r", id_info);	
+
+	mod_id = atol(id_info);
+	
+	rt_kprintf("modid =  %d\n\r", mod_id);
+	
+	if (mod_id > 0)    // && Sys_Setup.app.id <= 65535
+	{
+		Sys_Setup.app.id = mod_id;
+		
+
+
+		  Cdma_Info.dev_id = (ABOX_DEV_TYPE << 24) | Sys_Setup.app.id;
+
+		rt_kprintf("ID saves ok,new BOX ID = %d\n\r", Sys_Setup.app.id);
+		SaveSetup(&Sys_Setup);	
+		return RT_EOK;
+
+
+	}
+	else	
+	{
+		rt_kprintf("ID save Error\n\r");
+		return RT_ERROR;
+	}
+			
+
+}
+
+
+extern void at_print_ctrl(int off);
+int cmd_setid(int argc, char **argv)
+{	
+	at_print_close();
+
+	rt_size_t len = 0;
+	rt_size_t len1 = 0;
+	rt_err_t ret = 0;
+	
+	rt_device_t fin_dev = rt_console_get_device();
+	char s_buf[10];
+    rt_memset(s_buf,0,10);
+	
+	rt_kprintf("/***********setid start********/\n\r");
+	rt_kprintf("Enter block 'Enter' to sure ID;\n");
+	rt_kprintf("Enter block 'R' to rewrite ID;\n");
+	rt_kprintf("Enter block 'Esc' to quit thisoperation.\n\n");
+	rt_kprintf("If the input data contains non-digital data, it will automatically help you mask.\r\n");
+	rt_kprintf("Such as input 'a1d2c3' + 'enter', the default input '123' + 'enter'.\r\n");
+	rt_kprintf("This BOX ID = %d\n\r", Sys_Setup.app.id);
+	rt_kprintf("Usage: setid 1 - 65535\n");
+	rt_kprintf("Please input new ID: \n");
+
+	wwdg_auto_open();
+   	while(1)
+   	{
+   		//IWDG_Feed();
+		len = rt_device_read(fin_dev, 0, s_buf+len1,sizeof(s_buf)-len1);
+		len1 += len; 
+		if(len)
+		{
+			switch(s_buf[len1-1])
+			{
+				case 0x1b:  //esc
+				{
+					rt_kprintf("\r\n");
+					rt_kprintf("BOX ID = %d\n\r", Sys_Setup.app.id);		
+					at_print_open();
+					rt_kprintf("/***********end********/\n\r");
+					return 0;						
+				}
+
+				case 0x0d: //enter
+				{
+					rt_kprintf("\r\n");
+					ret = updata_id(s_buf);
+					if(ret == RT_EOK)
+						goto loop;
+					else
+						len1 = 11;  //re-enter
+				}
+				break;
+
+				case 'r':
+				{
+					rt_kprintf("\r\n");
+					len1 = 11; 
+				}
+				break;
+
+				default:
+				rt_kprintf("%c",s_buf[len1-1]);
+				if((s_buf[len1-1] < '0') || (s_buf[len1-1] > '9')) //非0~9的数据 则自动屏蔽
+				{
+					s_buf[len1-1] = 0;
+					len1 --;
+				}
+				break;
+
+			}
+		}
+
+		if(len1>10)
+		{
+			rt_kprintf("Usage: setid 1 - 65535,please re-enter\n");
+			rt_memset(s_buf,0,10);
+			len = 0; 
+			len1 = 0;
+		}
+
+
+	}
+
+#if 1
+	loop:	
+	rt_memset(s_buf,0,10);
+	len = 0; 
+	len1 = 0;
+	rt_kprintf("Do you need to restart the device?\n");
+	rt_kprintf("Enter block 'Y' to reboot;\nEnter block 'N' to continue.\n");
+	while(1)
+	{
+		//IWDG_Feed();
+		len = rt_device_read(fin_dev, 0, s_buf,sizeof(s_buf));
+		if(len)
+		{
+			switch(s_buf[0])
+			{
+				case 'y':
+				{
+					at_print_ctrl(0);
+					rt_kprintf("Device is reboot!\n\r");
+					rt_kprintf("/***********end********/\n\r");
+					extern void cmd_reboot(void);
+					cmd_reboot();
+				}
+				wwdg_auto_close();
+				return 0;
+
+				case 'n':
+					at_print_ctrl(0);
+					rt_kprintf("Device is reboot!\n\r");
+					rt_kprintf("/***********end********/\n\r");
+					wwdg_auto_close();
+				return 0;
+
+				default:
+					break;
+		
+			}
+		}
+		len = 0;
+	}
+#endif	
+//at_print_open();
+
+//	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_setid, __cmd_setid, Set id.);
+
+int cmd_testflash(int argc, char **argv)
+{	
+	  Sys_Setup.app.id = 0;
+	  rt_kprintf("set modid = %d\r\n",Sys_Setup.app.id);
+	  return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_testflash, __cmd_testflash, test flash.);
+
+#ifdef ABOX
+#include "abox.h"
+extern abox_information aboxInfo;
+
+int cmd_listCbox(int argc, char **argv)
+{	
+	int i = 0;
+	cbox_information  *cboxInfo_t = &aboxInfo.cboxTotalInfo.cboxInfo[0];
+	
+  	/* data copy */
+	for(i=0;i<aboxInfo.cboxTotalInfo.cboxOnlineNum;i++)
+	{
+		at_printf("cbox[%d]= %d\r\n",i,cboxInfo_t->devidCollection[CBOX_DEVID]&0xffffff);
+
+		cboxInfo_t++;
+	}
+
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_listCbox, __cmd_listCbox, list online Cbox.);
+
+#endif
+
+
+
+#include "sub_G.h"
+int cmd_setfreq(int argc, char **argv)
+{		
+    rt_kprintf("BOX ind num = %d\r\n  BOX freqSaveNum = %d\r\n freq now number = %d\r\n  freqCollect: ",
+		        aboxInfo.freqInfo.preFreq,
+		        aboxInfo.freqInfo.freqSaveNum,
+		        Cdma_Info.freq_num);
+
+	int i = 0;
+	for(;i<aboxInfo.freqInfo.freqSaveNum;i++)
+		rt_kprintf(" %d ",aboxInfo.freqInfo.freqCollect[i]);
+
+
+#if 0	
+	char freq =  atoi(argv[1]);
+	if(freq >= 0  && freq < RF_FREQ_CONTROL_INTE_8_NUM)
+	{
+		Cdma_Info.freq_num = freq;
+		rt_event_send(aboxInfo.aboxEvent, COM_CHANGE_FREQ_ET);		
+		
+	}
+	rt_kprintf("BOX freq set number = %d\n\r", aboxInfo.freqInfo.preFreq);
+#endif
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_setfreq, __cmd_setfreq, Set freq.);
+
+
+
+
+int cmd_setuser(int argc, char **argv)
+{	
+		rt_kprintf("BOX USER = %s\n\r", Sys_Setup.seruse);
+		if (argv[1] != NULL)
+		{
+				rt_kprintf("Enter the new USER: %s\n\r", argv[1]);	
+				rt_memset(Sys_Setup.seruse, 0, sizeof(Sys_Setup.seruse));				
+				rt_strncpy(Sys_Setup.seruse, argv[1], sizeof(Sys_Setup.seruse) -1);
+				SaveSetup(&Sys_Setup);
+		}
+		else
+				rt_kprintf("Usage: setuser name\n");				
+		return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_setuser, __cmd_setuser, Set user.);
+int cmd_setpass(int argc, char **argv)
+{	
+		rt_kprintf("BOX PASS = %s\n\r", Sys_Setup.setpass);
+		if (argv[1] != NULL)
+		{
+				rt_kprintf("Enter the new PASS: %s\n\r", argv[1]);	
+				rt_memset(Sys_Setup.setpass, 0, sizeof(Sys_Setup.setpass));		
+				rt_strncpy(Sys_Setup.setpass, argv[1], sizeof(Sys_Setup.setpass) -1);
+				SaveSetup(&Sys_Setup);
+		}
+		else
+				rt_kprintf("Usage: setpass ******\n");				
+		return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_setpass, __cmd_setpass, Set pass.);
+
+
+
+
+#if 0
+enum {
+	MARK_INPUT_ERROR,//输入错误
+	MARK_MODIFY,//修改
+	MARK_SKIP,//跳过
+   	MARK_EXIT,//退出
+   	
+	MARK_CONFIRM,//确认
+	MARK_CANCEL,//取消
+};
+
+int checkInfo(rt_device_t fin_dev)
+{
+	int ret;
+	char s_buf[5] = {0};
+	rt_kprintf("\r\nEnter 'y' to confirm the choice;Enter 'n' to cancel the choice;\r\n");
+	
+	while(1)
+	{
+	 	ret = rt_device_read(fin_dev, 0, s_buf,sizeof(s_buf));
+	 	if(ret)
+		{
+			switch(s_buf[0])
+			{	
+				case 'y':
+				    rt_kprintf("Enter 'y'.");		
+				return MARK_CONFIRM;
+
+				case 'n':
+					rt_kprintf("Enter 'n'.");
+				return MARK_CANCEL;
+			}
+	 	}	
+	}				
+}
+
+void recvComData(rt_device_t fin_dev,char *s_buf)
+{
+	rt_uint16_t len = 0;
+	rt_size_t ret = 0;
+	rt_memset(s_buf,0,24);
+
+	rt_kprintf("\r\nwrite info: ");
+	while(1)
+	{
+		ret = rt_device_read(fin_dev, 0, s_buf+len,sizeof(s_buf));
+	 	if(ret)
+		{
+			len += ret;
+			rt_kprintf("%c",s_buf[len]);
+			if(s_buf[len]==0x0d) break;
+	 	}
+		else
+			break;
+	}
+
+}
+
+
+void configEth(rt_device_t fin_dev,char *s_buf,con_eth_config *ethConfig)
+{
+	int ret;
+	int mark = MARK_INPUT_ERROR;
+
+	
+	/* dhcp */
+	rt_kprintf("Config cable connecttion.\r\n");
+	rt_kprintf("Do you want to open DHCP? \r\n");
+	if(MARK_CONFIRM == checkInfo(fin_dev))
+	{
+		rt_kprintf("DHCP open. ");
+		ethConfig->status = DHCP_OPEN;
+	}
+	else
+	{
+		rt_kprintf("DHCP close. ");
+		ethConfig->status = DHCP_CLOSE;
+	}
+
+	if(ethConfig->status == DHCP_CLOSE)
+	{
+		while(1)
+		{
+			rt_kprintf("\n\r***********  set ip addr  ***********\r\n");
+    		rt_kprintf("Please set ip address: \n\r");
+			recvComData(fin_dev,s_buf);
+			if(MARK_CONFIRM == checkInfo(fin_dev))
+			{
+				rt_memcpy(ethConfig->netAddrConfig.ipaddr,s_buf,16);
+				clearStrInfo(ethConfig->netAddrConfig.ipaddr,16);
+				break;
+			}
+		}
+
+		while(1)
+		{
+			rt_kprintf("\n\r***********  set mask addr  ***********\r\n");
+    		rt_kprintf("Please set mask address: \n\r");
+			recvComData(fin_dev,s_buf);
+			if(MARK_CONFIRM == checkInfo(fin_dev))
+			{
+				rt_memcpy(ethConfig->netAddrConfig.ipmaskaddr,s_buf,16);
+				clearStrInfo(ethConfig->netAddrConfig.ipmaskaddr,16);
+				break;
+			}
+		}
+
+		while(1)
+		{
+			rt_kprintf("\n\r***********  set gatway addr  ***********\r\n");
+    		rt_kprintf("Please set ip address: \n\r");
+			recvComData(fin_dev,s_buf);
+			if(MARK_CONFIRM == checkInfo(fin_dev))
+			{
+				rt_memcpy(ethConfig->netAddrConfig.ipgatwayaddr,s_buf,16);
+				clearStrInfo(ethConfig->netAddrConfig.ipgatwayaddr,16);
+				break;
+			}
+		}
+
+
+		
+	}
+	
+}
+
+
+
+
+void configWifi(rt_device_t fin_dev,char *s_buf,con_wifi_config *wifiConfig)
+{
+	while(1)
+	{
+		rt_kprintf("\n\r***********  set wifi name  ***********\r\n");
+		rt_kprintf("Please set wifi name: \n\r");
+		recvComData(fin_dev,s_buf);
+		if(MARK_CONFIRM == checkInfo(fin_dev))
+		{
+			rt_memcpy(wifiConfig->wifiName,s_buf,24);
+			break;
+		}
+	}
+
+	while(1)
+	{
+		rt_kprintf("\n\r***********  set wifi password  ***********\r\n");
+		rt_kprintf("Please set wifi password: \n\r");
+		recvComData(fin_dev,s_buf);
+		if(MARK_CONFIRM == checkInfo(fin_dev))
+		{
+			rt_memcpy(wifiConfig->wifiPassword,s_buf,24);
+			break;
+		}
+	}
+
+}
+
+int cmd_setip(int argc, char **argv)
+{	
+#ifdef ABOX
+at_print_close();	
+		//rt_enter_critical();
+
+		char s_buf[24];
+		int ret = 0;
+		rt_uint8_t mark = MARK_INPUT_ERROR;
+		serverNet_information cmd_serNetConfig;
+		
+		rt_device_t fin_dev = rt_console_get_device();
+		controlServerInfo(READ_NETCONFIG_INFO,&cmd_serNetConfig);
+
+		wwdg_auto_open();
+		rt_kprintf("/***********start***********\n\r");
+		listConnectInfo();
+
+		
+		rt_kprintf("Please choose a way to connect to the server.\n");
+		rt_kprintf("\nEnter '1' to choose cable connection,\nEnter '2' to choose Wifi connection,\nEnter '3' to choose both of the above connections,\nEnter block 'Enter' do not operate,\nEnter block 'Esc' to quit\r\n");
+		while(1)
+		{
+			 ret = rt_device_read(fin_dev, 0, s_buf,sizeof(s_buf));
+			 if(ret)
+			 {
+				switch(s_buf[0])
+				{	
+					case '1':
+						cmd_serNetConfig.netConfig.configStyle = ETH_STYLE;
+						mark = MARK_MODIFY;
+					break;
+
+					case '2':
+						cmd_serNetConfig.netConfig.configStyle = WIFI_STYLE;
+						mark = MARK_MODIFY;
+					break;
+					
+					case '3':
+						cmd_serNetConfig.netConfig.configStyle = ETH_WIFI_STYLE;
+						mark = MARK_MODIFY;
+					break;
+
+					case 0x1b://esc
+						mark = MARK_EXIT;
+					break;
+
+					case 0x0d://enter
+						mark = MARK_SKIP;
+					break;
+				}
+			 }
+
+			 if(MARK_SKIP == mark) break;
+			 if(MARK_EXIT == mark) return 0;
+			 if(MARK_INPUT_ERROR== mark) continue;
+
+			 if(MARK_CONFIRM == checkInfo(fin_dev)) break;
+			 
+		}
+
+		switch(cmd_serNetConfig.netConfig.configStyle)
+		{
+			case ETH_STYLE:
+				configEth(fin_dev,s_buf,&cmd_serNetConfig.netConfig.ethConfig);
+			break;
+
+			case WIFI_STYLE:
+				configWifi(fin_dev,s_buf,&cmd_serNetConfig.netConfig.wifiConfig);
+			break;
+
+			case ETH_WIFI_STYLE:
+				configEth(fin_dev,s_buf,&cmd_serNetConfig.netConfig.ethConfig);
+				configWifi(fin_dev,s_buf,&cmd_serNetConfig.netConfig.wifiConfig);
+			break;
+		}
+		controlServerInfo(WRITE_NETCONFIG_INFO,&cmd_serNetConfig);
+		wwdg_auto_open();
+		rt_kprintf("************end**********/\n\r");
+at_print_open();	
+		cmd_reboot();
+
+#endif	
+
+
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_setip, __cmd_setip, Set ip for ABOX.);
+#endif
+
+
+int cmd_debugClose()
+{	
+	at_print_close();
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_debugClose, __cmd_debugClose, debug close.);
+
+int cmd_debugOpen()
+{	
+	at_print_open();
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_debugOpen, __cmd_debugOpen, debug open.);
+
+int cmd_connectInfo()
+{	
+	//extern void listConnectInfo();
+	listConnectInfo();
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_connectInfo, __cmd_connectInfo, list connect information.);
+
+
+
+int cmd_close()
+{	
+	extern void quitTcpConnect(void);
+	quitTcpConnect();
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_close, __cmd_close, list connect information.);
+
+
+int cmd_setport(int argc, char **argv)
+{	
+		rt_kprintf("BOX PORT = %s\n\r", Sys_Setup.serport);
+		if (argv[1] != NULL)
+		{
+				rt_kprintf("Enter the new PORT: %s\n\r", argv[1]);	
+				rt_memset(Sys_Setup.serport, 0, sizeof(Sys_Setup.serport));
+				rt_strncpy(Sys_Setup.serport, argv[1], sizeof(Sys_Setup.serport) -1);
+				SaveSetup(&Sys_Setup);
+
+				cmd_reboot();
+		}
+		else
+				rt_kprintf("Usage: setport xxxxx\n");				
+		return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_setport, __cmd_setport, Set port.);
+
+int cmd_setgprs(int argc, char **argv)
+{	
+	  char gprs[][5] = {"M600", "M100", "A6"};
+
+		if (argv[1] != NULL)
+		{
+				rt_kprintf("Enter the new type: %s\n\r", argv[1]);	
+				Sys_Setup.cdmatype = argv[1][0] - 0x30;
+				SaveSetup(&Sys_Setup);
+		    rt_kprintf("MODEM TYPE = %s\n\r", gprs[Sys_Setup.cdmatype]);				
+		}
+		else
+	  {
+		    rt_kprintf("MODEM TYPE = %s\n\r", gprs[Sys_Setup.cdmatype]);				
+			  rt_kprintf("Usage: setgprs 0: M600  1: M100 2: A6\n");
+		}
+	
+		return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_setgprs, __cmd_setgprs, Set gprs.);
+
+
+#ifdef RT_CDMA_USING
+
+int cmd_uimcode(int argc, char **argv)
+{	
+	  char          code[128];
+		rt_device_t 	device = 0;
+	
+		if (argc < 6)
+				rt_kprintf("Usage: Uimcode AKEY ESN MIN AN AAA\n");	
+		else
+		{
+		    device = rt_device_find("uart2");
+		    if (device!= RT_NULL)
+				    rt_device_open(device, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX);	
+        else
+            return 0;					
+			  rt_kprintf ("Uimcode is %s %s %s %s %s\n",         argv[1], argv[2], argv[3], argv[4], argv[5]);
+			  rt_sprintf (code, "AT^UIMCODE=%s,%s,%s,%s,%s\r\n", argv[1], argv[2], argv[3], argv[4], argv[5]);
+        rt_device_write(device, 0, code, rt_strlen(code));
+        rt_thread_delay(50);
+        rt_memset(code, 0, BUFF_LEN);
+        rt_device_read(device, 0, code, 64); 
+        if (rt_strstr(code, "OK"))
+        {
+            rt_kprintf ("Set uimcode ok\n");
+        }	
+        else
+            rt_kprintf ("Set uimcode error\n");					
+		}
+	
+		return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_uimcode, __cmd_uimcode, Set UIMCODE.);
+
+int	cmd_sim(int argc, char **argv)
+{
+		extern stCdmaInfo	Cdma_Info;
+		char							str[32];
+	
+	
+	  rt_sprintf(str, "%s:%s", Sys_Setup.seraddr, Sys_Setup.serport);
+		rt_kprintf("\033[2J");		
+		rt_kprintf("******************************     CDMA INFO     *******************************\n");	
+		rt_kprintf("NAME: %-32s  VER : %-32s\n",   Cdma_Info.name + 1,    Cdma_Info.revision + 1);
+/*
+	if (Sys_Setup.cdmatype < 2)	
+    {	
+				rt_kprintf("AKEY: %-32s  ESN : %-32s\n",   Cdma_Info.imsi.akey + 1,    Cdma_Info.imsi.esn);	
+				rt_kprintf("IMSI: %-32s  AN  : %-32s\n",   Cdma_Info.imsi.imsi,        Cdma_Info.imsi.an);		
+				rt_kprintf("AAA : %-32s  SN  : %-32s\n",   Cdma_Info.imsi.aaa,         Cdma_Info.imsi.sn + 1);	
+    }
+		else
+		*/
+		{
+				rt_kprintf("CCID: %-32s  \n",   Cdma_Info.imsi.ccid);				 
+		}	
+	  rt_kprintf("ID  : %-32d  PORT: %-32s\n",   Sys_Setup.app.id,      Sys_Setup.serport);	
+	  rt_kprintf("IP  : %-32s  SIP : %-32s\n",   Sys_Setup.ipaddr,      Sys_Setup.seraddr);		
+		rt_kprintf("USER: %-32s  PASS: %-32s\n",   Sys_Setup.seruse,      Sys_Setup.setpass);
+		rt_kprintf("MDN : %-32s  \n",   Cdma_Info.mdn);
+		
+		rt_kprintf("\n********************************************************************************\n");
+	  rt_kprintf("RSSI: %4u  SER: %4u  CREG: %4u SIM: %4u  LAC: %4u  CID: %4u\n", Cdma_Info.rssi , Cdma_Info.ser, Cdma_Info.cregsta, Cdma_Info.sim, Cdma_Info.lac, Cdma_Info.cid);
+	  rt_kprintf("POS : N = %03d.%d  E = %03d.%d\n", Cdma_Info.n / 1000000l, Cdma_Info.n % 1000000l, Cdma_Info.e / 1000000l, Cdma_Info.e % 1000000l);
+
+	return 0;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_sim, __cmd_sim, Display sim.);
+
+void	cmd_ver(void)
+{	
+	rt_kprintf("VER  SOFT: %d \n",Sys_Setup.ver);
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_ver, __cmd_ver, Display Ver.);
+
+#ifdef ABOX
+/* telnet server */
+void cmd_telnet(void)
+{
+	//extern int telnet_server(void);
+	telnet_server();
+	return ;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_telnet,__cmd_telnet ,startup telnet server.);
+
+
+void cmd_listReport(void)
+{
+	listReport();
+	return ;
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_listReport,__cmd_listReport ,display data status.);
+
+
+/*
+void cmd_ping(char* target, rt_uint32_t time, rt_size_t size)
+{
+	extern rt_err_t ping(char* target, rt_uint32_t time, rt_size_t size);
+	ping(target,time,size);
+	
+}
+FINSH_FUNCTION_EXPORT_ALIAS(cmd_ping, __cmd_ping ,ping network host);
+*/
+#endif
+
+
+
+
+#endif
+#endif
+#endif
+#endif
+

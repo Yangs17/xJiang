@@ -1,0 +1,12 @@
+.\build\havege.o: ..\mbedtls\mbedtls\library\havege.c
+.\build\havege.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\havege.o: ..\include\rtthread.h
+.\build\havege.o: ..\applications\rtconfig.h
+.\build\havege.o: ..\include\rtdebug.h
+.\build\havege.o: ..\include\rtdef.h
+.\build\havege.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\havege.o: ..\include\rtservice.h
+.\build\havege.o: ..\include\rtm.h
+.\build\havege.o: ..\include\rtthread.h
+.\build\havege.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\havege.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h

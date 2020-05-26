@@ -1,0 +1,12 @@
+.\build\md4.o: ..\mbedtls\mbedtls\library\md4.c
+.\build\md4.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\md4.o: ..\include\rtthread.h
+.\build\md4.o: ..\applications\rtconfig.h
+.\build\md4.o: ..\include\rtdebug.h
+.\build\md4.o: ..\include\rtdef.h
+.\build\md4.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\md4.o: ..\include\rtservice.h
+.\build\md4.o: ..\include\rtm.h
+.\build\md4.o: ..\include\rtthread.h
+.\build\md4.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\md4.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h

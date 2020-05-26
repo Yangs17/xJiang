@@ -1,0 +1,14 @@
+.\build\module.o: ..\Libraries\kernel\module.c
+.\build\module.o: ..\include\rthw.h
+.\build\module.o: ..\include\rtthread.h
+.\build\module.o: ..\applications\rtconfig.h
+.\build\module.o: ..\include\rtdebug.h
+.\build\module.o: ..\include\rtdef.h
+.\build\module.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\module.o: ..\include\rtservice.h
+.\build\module.o: ..\include\rtm.h
+.\build\module.o: ..\include\rtthread.h
+.\build\module.o: ..\Libraries\finsh\finsh.h
+.\build\module.o: D:\keil5\ARM\ARMCC\Bin\..\include\ctype.h
+.\build\module.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\build\module.o: D:\keil5\ARM\ARMCC\Bin\..\include\string.h

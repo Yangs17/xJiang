@@ -1,0 +1,12 @@
+.\build\threading.o: ..\mbedtls\mbedtls\library\threading.c
+.\build\threading.o: ..\mbedtls\mbedtls\include\mbedtls/config.h
+.\build\threading.o: ..\include\rtthread.h
+.\build\threading.o: ..\applications\rtconfig.h
+.\build\threading.o: ..\include\rtdebug.h
+.\build\threading.o: ..\include\rtdef.h
+.\build\threading.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\threading.o: ..\include\rtservice.h
+.\build\threading.o: ..\include\rtm.h
+.\build\threading.o: ..\include\rtthread.h
+.\build\threading.o: ..\mbedtls\mbedtls\include\mbedtls/check_config.h
+.\build\threading.o: D:\keil5\ARM\ARMCC\Bin\..\include\limits.h
